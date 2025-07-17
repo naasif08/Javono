@@ -70,7 +70,16 @@ public class PythonInstaller {
                 "-p", INSTALL_DIR.toString()
         );
 
-        ProcessBuilder pb = new ProcessBuilder(command);
+
+        ProcessBuilder pb = new ProcessBuilder(
+                "bash",
+                "Miniconda3-latest-Linux-x86_64.sh",
+                "-b",
+                "-p",
+                installerPath.toAbsolutePath().toString()
+        );
+
+
         pb.inheritIO();
         Process p = pb.start();
         int exit = p.waitFor();
