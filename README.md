@@ -1,6 +1,6 @@
 # Javono
 
-**Javono — Bridging Java and Embedded Innovation**
+**Javono — Java on Native Embedded Operation**
 
 Javono (Under development) is a lightweight Java framework to write microcontroller programs using the familiar `setup()` and `loop()` style. Currently targeting ESP32(ESP-WROOM-32), with plans to support other MCUs.
 
