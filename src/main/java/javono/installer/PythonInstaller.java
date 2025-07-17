@@ -13,8 +13,17 @@ import java.util.List;
 import java.util.Locale;
 
 public class PythonInstaller {
-    private static final Path ESP_IDF_PATH = Paths.get("C:", "Javono", "esp-idf-v5.4.2");
-    private static final Path INSTALL_DIR = ESP_IDF_PATH.resolve("python-embed");
+    private static final Path ESP_IDF_PATH = getDefaultInstallPath();
+    private static final Path INSTALL_DIR = ESP_IDF_PATH.resolve("miniconda");
+
+    private static Path getDefaultInstallPath() {
+        String os = detectOS();
+        if ("windows".equals(os)) {
+            return Paths.get("C:", "Javono", "esp-idf-v5.4.2");
+        } else {
+            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-v5.4.2");
+        }
+    }
 
     public static void ensureMinicondaInstalled() throws IOException, InterruptedException {
         Path pythonExe = getPythonExecutable();
@@ -65,21 +74,13 @@ public class PythonInstaller {
         Files.setPosixFilePermissions(installerPath, PosixFilePermissions.fromString("rwxr-xr-x"));
 
         List<String> command = Arrays.asList(
-                installerPath.toString(),
-                "-b",                                // Batch (no prompt)
+                "bash",                                    // or "/bin/bash"
+                installerPath.toAbsolutePath().toString(), // full path to script
+                "-b",
                 "-p", INSTALL_DIR.toString()
         );
 
-
-        ProcessBuilder pb = new ProcessBuilder(
-                "bash",
-                "Miniconda3-latest-Linux-x86_64.sh",
-                "-b",
-                "-p",
-                installerPath.toAbsolutePath().toString()
-        );
-
-
+        ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
         int exit = p.waitFor();

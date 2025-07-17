@@ -12,12 +12,21 @@ import java.util.Locale;
 
 public class ESPInstaller {
 
-    private static final Path ESP_IDF_PATH = Paths.get("C:", "Javono", "esp-idf-v5.4.2");
+    private static final Path ESP_IDF_PATH = getDefaultInstallPath();
     private static final Path PYTHON_PATH = ESP_IDF_PATH.resolve("python-embed").resolve(getPythonBinary());
     private static final Path GIT_PATH = ESP_IDF_PATH.resolve("portable-git").resolve("cmd");
 
     private static final Path TOOLS_PATH = ESP_IDF_PATH.resolve(".espressif").resolve("tools");
     private static final Path PYTHON_ENV_PATH = ESP_IDF_PATH.resolve(".espressif").resolve("python_env");
+
+    private static Path getDefaultInstallPath() {
+        String os = detectOS();
+        if ("windows".equals(os)) {
+            return Paths.get("C:", "Javono", "esp-idf-v5.4.2");
+        } else {
+            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-v5.4.2");
+        }
+    }
 
     public static void runInstallScript() throws IOException, InterruptedException {
         String os = detectOS();
