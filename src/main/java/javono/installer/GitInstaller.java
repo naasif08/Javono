@@ -1,5 +1,6 @@
 package javono.installer;
 
+import javono.detector.PathDetector;
 import javono.logger.JavonoLogger;
 import javono.utils.FileDownloader;
 
@@ -35,6 +36,11 @@ public class GitInstaller {
         if (Files.exists(DOWNLOAD_FILE)) {
             JavonoLogger.warn("Previous archive found. Deleting...");
             Files.delete(DOWNLOAD_FILE);
+        }
+
+        if (PathDetector.detectEspressifGitPath() != null) {
+            JavonoLogger.success("Portable Git already installed");
+            return;
         }
 
         // Download archive

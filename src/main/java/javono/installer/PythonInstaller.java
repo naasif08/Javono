@@ -38,7 +38,7 @@ public class PythonInstaller {
         if (url == null) throw new IOException("Unsupported OS/arch: " + os + "/" + arch);
 
         String filename = url.substring(url.lastIndexOf("/") + 1);
-        Path installerPath = Paths.get(filename);
+        Path installerPath = Paths.get(System.getProperty("java.io.tmpdir")).resolve(filename);
 
         JavonoLogger.info("Downloading Miniconda from: " + url);
         FileDownloader.downloadWithResume(url, installerPath);
@@ -63,6 +63,7 @@ public class PythonInstaller {
                 "/D=" + INSTALL_DIR.toString().replace("/", "\\") // Windows needs backslashes
         );
 
+        JavonoLogger.info("Running Windows Miniconda installer: " + String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
@@ -70,20 +71,53 @@ public class PythonInstaller {
         if (exit != 0) throw new IOException("Miniconda installer failed with exit code: " + exit);
     }
 
+    private static void ensurePythonVenvAvailable() throws IOException, InterruptedException {
+        if (!"linux".equals(detectOS())) return; // Only for Linux
+
+        ProcessBuilder checkVenv = new ProcessBuilder("python3", "-m", "venv", "--help");
+        Process checkProcess = checkVenv.start();
+        int checkExit = checkProcess.waitFor();
+
+        if (checkExit == 0) {
+            JavonoLogger.info("python3-venv is already available.");
+            return;
+        }
+
+        JavonoLogger.info("python3-venv not found. Attempting to install...");
+
+        // Try installing via apt
+        ProcessBuilder install = new ProcessBuilder("sudo", "apt-get", "update");
+        install.inheritIO().start().waitFor();
+
+        ProcessBuilder installVenv = new ProcessBuilder("sudo", "apt-get", "install", "-y", "python3-venv");
+        installVenv.inheritIO();
+        Process installProcess = installVenv.start();
+        int installExit = installProcess.waitFor();
+
+        if (installExit != 0) {
+            throw new IOException("Failed to install python3-venv via apt-get.");
+        }
+
+        JavonoLogger.success("python3-venv installed successfully.");
+    }
+
+
     private static void runUnixInstaller(Path installerPath) throws IOException, InterruptedException {
         Files.setPosixFilePermissions(installerPath, PosixFilePermissions.fromString("rwxr-xr-x"));
 
         List<String> command = Arrays.asList(
-                "bash",                                    // or "/bin/bash"
-                installerPath.toAbsolutePath().toString(), // full path to script
-                "-b",
+                "bash",
+                installerPath.toAbsolutePath().toString(),
+                "-b",  // batch (silent)
                 "-p", INSTALL_DIR.toString()
         );
 
+        JavonoLogger.info("Running Unix Miniconda installer: " + String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
         int exit = p.waitFor();
+        ensurePythonVenvAvailable();
         if (exit != 0) throw new IOException("Miniconda installer failed with exit code: " + exit);
     }
 
@@ -106,7 +140,7 @@ public class PythonInstaller {
         String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
         if (os.contains("win")) return "windows";
         if (os.contains("mac")) return "macos";
-        if (os.contains("nux") || os.contains("nix")) return "linux";
+        if (os.contains("nux") || os.contains("nix") || os.contains("aix")) return "linux";
         return "unknown";
     }
 

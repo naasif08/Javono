@@ -58,7 +58,7 @@ public class PathDetector {
     }
 
     public static String detectCmakePath() {
-        return detectTool(isWindows() ? "cmake.exe" : "cmake");
+        return detectTool(isWindows() ? "cmake.exe" : "build.cmake");
     }
 
     public static String detectNinjaPath() {
@@ -145,10 +145,11 @@ public class PathDetector {
             if (f.isDirectory()) {
                 File result = searchFileRecursively(f, targetFileName);
                 if (result != null) return result;
-            } else if (f.getName().equalsIgnoreCase(targetFileName) && f.canExecute()) {
+            } else if (f.getName().equalsIgnoreCase(targetFileName)) {
                 return f;
             }
         }
         return null;
     }
+
 }

@@ -149,7 +149,7 @@ public class CH340Installer {
             if (in != null) {
                 File doc = new File("CH340-Linux-README.txt");
                 Files.copy(in, doc.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("📁 Linux guide extracted to: " + doc.getAbsolutePath());
+                JavonoLogger.info("Linux guide extracted to: " + doc.getAbsolutePath());
             }
         } catch (IOException e) {
             JavonoLogger.error("Failed to extract Linux README: " + e.getMessage());

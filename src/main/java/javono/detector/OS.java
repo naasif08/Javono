@@ -9,7 +9,7 @@ public enum OS {
     public static OS detect() {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) return WINDOWS;
-        if (osName.contains("nux") || osName.contains("nix")) return LINUX;
+        if (osName.contains("nux") || osName.contains("nix") || osName.contains("aix")) return LINUX;
         if (osName.contains("mac")) return MACOS;
         return UNKNOWN;
     }

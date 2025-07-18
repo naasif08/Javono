@@ -1,5 +1,6 @@
 package javono.probuilder;
 
+import javono.detector.OS;
 import javono.detector.ToolPaths;
 import javono.logger.JavonoLogger;
 
@@ -19,7 +20,11 @@ public class ProjectCreator {
         Path mainDir = projectDir.toPath().resolve("main");
         Files.createDirectories(mainDir);
         JavonoLogger.info("Created project directory: " + projectDir.getAbsolutePath());
-        writeFiles();
+        if (OS.detect().isWindows()) {
+            writeFiles();
+        } else {
+            writeFilesLinux();
+        }
         return projectDir;
     }
 
@@ -38,6 +43,25 @@ public class ProjectCreator {
         writeTextFile(PROJECT_DIR + "\\main\\Javono_serial.h", serialHeaderfile());
         writeTextFile(PROJECT_DIR + "\\main\\Javono_serial.c", serialSourceFile());
         writeTextFile(PROJECT_DIR + "\\main\\main.c", mainCContent());
+
+        JavonoLogger.info("Created all project files.");
+    }
+
+    private static void writeFilesLinux() throws IOException {
+        writeTextFile(PROJECT_DIR + "//CMakeLists.txt", cmakeListsTxtContent());
+        writeTextFile(PROJECT_DIR + "//LICENSE", licenseContent());
+        writeTextFile(PROJECT_DIR + "//README.md", readmeContent());
+        writeTextFile(PROJECT_DIR + "//.clangd", clangdContent());
+        writeTextFile(PROJECT_DIR + "//.clang-format", clangFormatContent());
+        writeTextFile(PROJECT_DIR + "//.cproject", cprojectContent());
+        writeTextFile(PROJECT_DIR + "//.project", projectContent());
+        writeTextFile(PROJECT_DIR + "//.gitignore", gitignoreContent());
+
+        writeTextFile(PROJECT_DIR + "//main//CMakeLists.txt", mainCMakeListsTxtContent());
+        writeTextFile(PROJECT_DIR + "//main//Kconfig.projbuild", kconfigProjbuildContent());
+        writeTextFile(PROJECT_DIR + "//main//Javono_serial.h", serialHeaderfile());
+        writeTextFile(PROJECT_DIR + "//main//Javono_serial.c", serialSourceFile());
+        writeTextFile(PROJECT_DIR + "//main//main.c", mainCContent());
 
         JavonoLogger.info("Created all project files.");
     }
@@ -207,7 +231,7 @@ public class ProjectCreator {
                     while (true) {
                         if (Javono_serial_read_line(buffer, sizeof(buffer))) {
                             if (strcmp(buffer, "flash") == 0) {
-                               
+                
                                 uart_write_bytes(UART_NUM_0, "thunder\\n", strlen("thunder\\n"));
                                 uart_wait_tx_done(UART_NUM_0, pdMS_TO_TICKS(50));
                                 break;
@@ -223,7 +247,7 @@ public class ProjectCreator {
                     static int index = 0;
                 
                     // Send "ready" to host to indicate ESP32 is ready for a command
-                   
+                
                     uart_write_bytes(UART_NUM, "Javono_read\\n", strlen("Javono_read\\n"));
                      uart_wait_tx_done(UART_NUM, pdMS_TO_TICKS(50));
                 
@@ -259,7 +283,7 @@ public class ProjectCreator {
                     if (message && strlen(message) > 0) {
                         char buffer[512];  // Adjust size as needed
                         snprintf(buffer, sizeof(buffer), "%s\\n", message);
-                      
+                
                         uart_write_bytes(UART_NUM, buffer, strlen(buffer));
                         uart_wait_tx_done(UART_NUM, pdMS_TO_TICKS(50));
                     }
