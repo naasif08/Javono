@@ -95,71 +95,42 @@ public class BatchBuilder {
 
     private void writeBashScript(File projectDir, String comPort) throws IOException {
         File bashFile = new File(projectDir, "esp32_build_flash.sh");
-        File pythonExeFile = new File(PYTHON_EXE_PATH);
-        File pythonEnvDir = pythonExeFile.getParentFile().getParentFile();
-        String idfPythonEnvPath = pythonEnvDir.getAbsolutePath();
         String bashContent = """               
                 #!/bin/bash
                 
                 # === Configuration ===
-                # Define ESP-IDF path and other necessary variables
-                export IDF_PATH="/home/nasif/Javono/esp-idf-v5.4.2"
-                export OPENOCD_SCRIPTS="$IDF_PATH/.espressif/tools/tools/openocd-esp32/v0.12.0-esp32-20250422/openocd-esp32/share/openocd/scripts"
-                export PYTHON_EXE_PATH="$IDF_PATH/.espressif/python_env/bin/python"
-                export GIT_PATH="$IDF_PATH/bin/git"
-                export CMAKE="/home/nasif/Javono/esp-idf-v5.4.2/tools/cmake"
+                IDF_PATH="%s"
+                PROJECT_DIR=$(pwd)
                 
-                # Export CMake and other necessary paths
-                export PATH="$IDF_PATH/tools/cmake:$IDF_PATH/tools/ninja:$IDF_PATH/tools:$PATH"
-                
-                if ! command -v "$PYTHON_EXE_PATH" &> /dev/null; then
-                    echo "❌ Python not found in ESP-IDF environment. Please install the Python environment."
-                    exit 1
-                fi
-                
-                if ! command -v "$IDF_PATH/tools/idf.py" &> /dev/null; then
-                    echo "❌ idf.py not found. Please make sure ESP-IDF is correctly installed."
-                    exit 1
-                fi
-                
-                # === Activate ESP-IDF Python virtual environment ===
+                # Load ESP-IDF environment
                 source "$IDF_PATH/export.sh"
                 
-                # === Navigate to project directory ===
-                PROJECT_DIR=$(pwd)  # Current working directory
-                echo "Project Directory: $PROJECT_DIR"
-                
-                cd "$PROJECT_DIR" || {
-                    echo "❌ Failed to change to project directory!"
-                    exit 1
-                }
-                
                 # === Build the project ===
-                echo "🔨 Building project..."
-                "$PYTHON_EXE_PATH" "$IDF_PATH/tools/idf.py" build
+                echo "🔨 Building the project..."
+                idf.py build
                 if [ $? -ne 0 ]; then
                     echo "❌ Build failed!"
                     exit 1
                 fi
                 
-                # === Flash the project to ESP32 ===
-                COM_PORT="$1"  # COM port as first argument
+                # === Flash the project ===
+                COM_PORT="$1"
                 if [ -z "$COM_PORT" ]; then
                     echo "❌ COM port not specified. Usage: $0 <com_port>"
                     exit 1
                 fi
                 
-                echo "🚀 Flashing project to $COM_PORT..."
-                "$PYTHON_EXE_PATH" "$IDF_PATH/tools/idf.py" -p "$COM_PORT" flash
+                echo "🚀 Flashing to $COM_PORT..."
+                idf.py -p "$COM_PORT" flash
                 if [ $? -ne 0 ]; then
                     echo "❌ Flash failed!"
                     exit 1
                 fi
                 
-                # === Done ===
-                echo "✅ Build and flash completed successfully."
+                echo "✅ Build and flash completed."
                 
                 """.formatted(
+                ToolPaths.idfPath,
                 projectDir.getAbsolutePath(),
                 comPort,
                 comPort

@@ -1,6 +1,7 @@
 package javono.utils;
 
 import javono.logger.JavonoLogger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,6 +11,15 @@ import java.util.Arrays;
  * Utility for running system shell commands.
  */
 public class CommandRunner {
+
+
+    public static int runCommand(String... commandParts) throws IOException, InterruptedException {
+        JavonoLogger.info("Running: " + String.join(" ", commandParts));
+        ProcessBuilder pb = new ProcessBuilder(commandParts);
+        pb.inheritIO(); // optional: prints output directly
+        Process process = pb.start();
+        return process.waitFor();
+    }
 
     /**
      * Runs the given command and blocks until it finishes.

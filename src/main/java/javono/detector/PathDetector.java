@@ -4,22 +4,36 @@ import com.fazecast.jSerialComm.SerialPort;
 import javono.logger.JavonoLogger;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 
 public class PathDetector {
 
     private static final Path IDF_ROOT = getDefaultIdfPath();
-    private static final String VERSION = "v5.4";
+    public static final String VERSION = "v5.4.2";
+    private static final String CONSTRAINT = "v5.4";
 
     private static Path getDefaultIdfPath() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            return Paths.get("C:", "Javono", "esp-idf-v5.4.2");
+            return Paths.get("C:", "Javono", "esp-idf-" + VERSION);
         } else {
-            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-v5.4.2");
+            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf");
+        }
+    }
+
+    private static Path getDefaultPath() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return Paths.get("C:", "Javono", "esp-idf-" + VERSION);
+        } else {
+            return Paths.get(System.getProperty("user.home"), "Javono");
         }
     }
 
@@ -28,7 +42,12 @@ public class PathDetector {
     }
 
     public static String detectTool(String executableName) {
-        File toolPath = searchFileRecursively(IDF_ROOT.toFile(), executableName);
+        File toolPath;
+        if (OS.detect().isWindows()) {
+            toolPath = searchFileRecursively(IDF_ROOT.toFile(), executableName);
+        } else {
+            toolPath = searchFileRecursively(getDefaultPath().toFile(), executableName);
+        }
         return (toolPath != null) ? toolPath.getParent() : null;
     }
 
@@ -37,7 +56,12 @@ public class PathDetector {
     }
 
     public static String detectPythonExecutable() {
-        File file = searchFileRecursively(IDF_ROOT.toFile(), isWindows() ? "python.exe" : "python");
+        File file;
+        if (OS.detect().isWindows()) {
+            file = searchFileRecursively(IDF_ROOT.toFile(), isWindows() ? "python.exe" : "python");
+        } else {
+            file = searchFileRecursively(getDefaultPath().toFile(), isWindows() ? "python.exe" : "python");
+        }
         return (file != null) ? file.getAbsolutePath() : null;
     }
 
@@ -49,20 +73,32 @@ public class PathDetector {
         return detectTool(isWindows() ? "ccache.exe" : "ccache");
     }
 
-    public static String detectEspressifGitPath() {
-        if (isWindows()) {
-            return String.valueOf(IDF_ROOT.resolve("cmd").resolve("git.exe"));
-        } else {
-            return String.valueOf(IDF_ROOT.resolve("bin").resolve("git"));
-        }
+    public static String findEspressifGitPath() {
+        return GitPathFinder.findGitPath(Path.of(Objects.requireNonNull(detectIdfPath())));
     }
 
     public static String detectCmakePath() {
-        return detectTool(isWindows() ? "cmake.exe" : "build.cmake");
+        if (OS.detect().isWindows()) {
+            return detectTool("cmake.exe");
+        } else {
+            try {
+                return getSystemPath("cmake");
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static String detectNinjaPath() {
-        return detectTool(isWindows() ? "ninja.exe" : "ninja");
+        if (OS.detect().isWindows()) {
+            return detectTool("ninja.exe");
+        } else {
+            try {
+                return getSystemPath("ninja");
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static String detectIdfPyPath() {
@@ -106,8 +142,19 @@ public class PathDetector {
         return null;
     }
 
+    private static String getSystemPath(String name) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder("which", name);
+        Process process = pb.start();
+
+        try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()))) {
+            String line = reader.readLine();
+            process.waitFor();
+            return line;
+        }
+    }
+
     public static String getConstraintFilePath() {
-        String FILE_NAME = "espidf.constraints." + VERSION + ".txt";
+        String FILE_NAME = "espidf.constraints." + CONSTRAINT + ".txt";
         return detectTool(FILE_NAME);
     }
 
@@ -119,7 +166,7 @@ public class PathDetector {
         JavonoLogger.info("Python Executable → " + detectPythonExecutable());
         JavonoLogger.info("Toolchain Bin → " + detectToolchainBin());
         JavonoLogger.info("Ccache Bin → " + detectCcacheBin());
-        JavonoLogger.info("Git Path → " + detectEspressifGitPath());
+        JavonoLogger.info("Git Path → " + findEspressifGitPath());
         JavonoLogger.info("CMake Path → " + detectCmakePath());
         JavonoLogger.info("Ninja Path → " + detectNinjaPath());
         JavonoLogger.info("Xtensa GDB → " + detectXtensaGdbPath());

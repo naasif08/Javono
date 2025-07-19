@@ -47,7 +47,7 @@ public final class ToolPaths {
         pythonExecutablePath = PathDetector.detectPythonExecutable();
         toolchainPath = PathDetector.detectToolchainBin();
         serialPort = PathDetector.detectEsp32Port();
-        gitPath = PathDetector.detectEspressifGitPath();
+        gitPath = PathDetector.findEspressifGitPath();
         xtensaGdbPath = PathDetector.detectXtensaGdbPath();
         xtensaToolchainPath = PathDetector.detectXtensaToolchainPath();
         cMakePath = PathDetector.detectCmakePath();
@@ -60,7 +60,7 @@ public final class ToolPaths {
         constraintsPath = PathDetector.getConstraintFilePath();
 
         loadPropertiesOverrides();
-        validatePaths();
+        //validatePaths();
 
         initialized = true;
     }

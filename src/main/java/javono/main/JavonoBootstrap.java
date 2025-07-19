@@ -7,56 +7,53 @@ import javono.logger.JavonoLogger;
 import javono.utils.PythonEnvChecker;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class JavonoBootstrap {
     public static void runFirstTimeSetupLocal() throws IOException, InterruptedException {
-        if (!EspIdfInstaller.isInstalled()) {
+        OS currentOS = OS.detect();
+
+        if (EspIdfInstaller.isInstalledForWindows()) {
             JavonoLogger.info("Setting up Environment for javono...");
-            EspIdfInstaller.downloadAndInstall(); // handles ZIP + extract
+
+            if (currentOS == OS.WINDOWS) {
+                EspIdfInstaller.downloadAndInstall(); // ZIP download + extract on Windows
+            } else if (currentOS == OS.LINUX) {
+                if (!EspIdfInstaller.isInstalledForUnix()) {
+                    // Use terminal-based installer for Linux/macOS
+                    EspIdfInstallerUnix.installForLinux();
+                }
+                // After terminal install finishes, you might want to verify installation again
+                if (!EspIdfInstaller.isInstalledForWindows() || !EspIdfInstaller.isInstalledForUnix()) {
+                    throw new RuntimeException("ESP-IDF installation failed or incomplete.");
+                }
+            } else if (currentOS == OS.MACOS) {
+                EspIdfInstallerUnix.installForMacOS();
+            } else {
+                throw new UnsupportedOperationException("Unsupported OS: " + currentOS);
+            }
         } else {
             JavonoLogger.success("Already Javono Environment installed...");
         }
 
-        try {
-            PythonInstaller.ensureMinicondaInstalled(); // handles ZIP + extract
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        if (!GitInstaller.isGitPresent()) {
+        if (OS.detect().isWindows()) {
             try {
-                GitInstaller.ensureGitInstalled();
+                PythonInstaller.ensureMinicondaInstalled();
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        } else {
-            JavonoLogger.success("Portable Git is already installed");
+            GitInstaller.ensureGitInstalled();
+            JavonoLogger.info("Installing ESP dependencies.");
+            try {
+                PythonEnvChecker.warnAndInstallIfMissing();
+                ESPInstaller.runInstallScript();
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
-
-        JavonoLogger.info("Installing ESP dependencies.");
-        try {
-            PythonEnvChecker.warnAndInstallIfMissing();
-            ESPInstaller.runInstallScript();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         JavonoLogger.success("All Dependencies are installed successfully!");
-        if (OS.detect() == OS.LINUX) {
-            NinjaInstaller.installNinja(getDefaultInstallPath().toAbsolutePath());
-        }
         CH340Installer.installDriver();
         PathDetector.printDetectedPaths();
     }
 
-    private static Path getDefaultInstallPath() {
-        OS os = OS.detect();
-        if (os == OS.WINDOWS) {
-            return Paths.get("C:", "Javono", "esp-idf-v5.4.2");
-        } else {
-            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-v5.4.2");
-        }
-    }
 }

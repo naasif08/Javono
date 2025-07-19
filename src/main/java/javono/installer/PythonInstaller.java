@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import static javono.detector.PathDetector.VERSION;
+
 public class PythonInstaller {
     private static final Path ESP_IDF_PATH = getDefaultInstallPath();
     private static final Path INSTALL_DIR = ESP_IDF_PATH.resolve("miniconda");
@@ -19,9 +21,9 @@ public class PythonInstaller {
     private static Path getDefaultInstallPath() {
         String os = detectOS();
         if ("windows".equals(os)) {
-            return Paths.get("C:", "Javono", "esp-idf-v5.4.2");
+            return Paths.get("C:", "Javono", "esp-idf-" + VERSION);
         } else {
-            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-v5.4.2");
+            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-" + VERSION);
         }
     }
 

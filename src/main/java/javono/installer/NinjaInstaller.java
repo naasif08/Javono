@@ -1,4 +1,6 @@
 package javono.installer;
+import javono.detector.PathDetector;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -87,6 +89,13 @@ public class NinjaInstaller {
         }
     }
 
+    public static void main(String[] args) {
+        try {
+            installNinja(Path.of(PathDetector.detectIdfPath()));
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
     // Optional: method to add ninja path to environment or your Javono config
 }
 

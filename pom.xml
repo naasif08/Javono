@@ -34,6 +34,11 @@
             <version>2.10.5</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.26.0</version> <!-- or latest -->
+        </dependency>
 
         <!-- Add other dependencies like jSerialComm, etc., as needed -->
     </dependencies>

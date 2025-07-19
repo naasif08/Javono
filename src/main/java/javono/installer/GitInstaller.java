@@ -1,153 +1,149 @@
 package javono.installer;
 
+import javono.detector.OS;
 import javono.detector.PathDetector;
 import javono.logger.JavonoLogger;
+import javono.utils.TerminalLauncher;
 import javono.utils.FileDownloader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.Locale;
+import java.util.Objects;
 
 public class GitInstaller {
 
-    // ESP-IDF base folder
-    private static final Path ESP_IDF_PATH = getEspIdfPath();
 
-    // Downloaded archive saved here
-    private static final Path DOWNLOAD_FILE = ESP_IDF_PATH.resolve(getDownloadFilename());
+    // Lazily initialized ESP-IDF path
+    private static Path espIdfPath;
 
-    // On Windows, Git executable is at esp-idf-v5.4.2/cmd/git.exe
-    // On Unix, at esp-idf-v5.4.2/bin/git
-    private static final Path GIT_EXECUTABLE_PATH = getGitExecutablePath();
+    public static void ensureGitInstalled() {
+        // Lazy init ESP-IDF path with validation
+        if (espIdfPath == null) {
+            espIdfPath = getEspIdfPath();
+        }
 
-    public static void ensureGitInstalled() throws IOException, InterruptedException {
-        if (isGitPresent()) {
-            JavonoLogger.success("Portable Git already installed at: " + GIT_EXECUTABLE_PATH);
+        if (isGitOnPath()) {
+            JavonoLogger.success("System Git found on PATH.");
             return;
         }
 
-        JavonoLogger.info("Installing Portable Git for OS: " + detectOS());
-
-        if (Files.exists(DOWNLOAD_FILE)) {
-            JavonoLogger.warn("Previous archive found. Deleting...");
-            Files.delete(DOWNLOAD_FILE);
-        }
-
-        if (PathDetector.detectEspressifGitPath() != null) {
-            JavonoLogger.success("Portable Git already installed");
-            return;
-        }
-
-        // Download archive
-        String downloadUrl = getDownloadUrl();
-        JavonoLogger.info("Downloading from: " + downloadUrl);
-        FileDownloader.downloadWithResume(downloadUrl, DOWNLOAD_FILE);
-
-        // Clean old Git folder (cmd or bin)
-        Path oldGitFolder = detectOS().equals("windows")
-                ? ESP_IDF_PATH.resolve("cmd")
-                : ESP_IDF_PATH.resolve("bin");
-
-        if (Files.exists(oldGitFolder)) {
-            JavonoLogger.info("🧹 Cleaning old Git folder: " + oldGitFolder);
-            deleteRecursively(oldGitFolder);
-        }
-
-        // Extract archive
-        if (isWindows()) {
-            JavonoLogger.info("Extracting Windows Git (.7z.exe)...");
-            extract7zExe(DOWNLOAD_FILE, ESP_IDF_PATH);
-        } else {
-            JavonoLogger.info("Extracting Unix Git (.tar.xz)...");
-            extractTarXZ(DOWNLOAD_FILE, ESP_IDF_PATH);
-        }
-
-        Files.deleteIfExists(DOWNLOAD_FILE);
-
-        JavonoLogger.info("Portable Git ready at: " + GIT_EXECUTABLE_PATH);
-    }
-
-    public static boolean isGitPresent() {
-        if (GIT_EXECUTABLE_PATH == null || !Files.exists(GIT_EXECUTABLE_PATH)) {
-            return false;
-        }
+        OS os = OS.detect();
+        JavonoLogger.warn("Git not found in system PATH.");
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(GIT_EXECUTABLE_PATH.toAbsolutePath().toString(), "--version");
+            switch (os) {
+                case WINDOWS -> {
+                    JavonoLogger.info("Installing Portable Git for Windows...");
+                    installPortableGitWindows();
+                }
+                case LINUX -> {
+                    JavonoLogger.info("Please install Git using your package manager.");
+                    TerminalLauncher.openSudoCommandInTerminal("sudo apt-get update && sudo apt-get install -y git");
+                }
+                case MACOS -> {
+                    JavonoLogger.info("Please install Git using Homebrew.");
+                    TerminalLauncher.openSudoCommandInTerminal("brew install git");
+                }
+                default -> throw new UnsupportedOperationException("Unsupported OS: " + os + ". Please install Git manually.");
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Git installation failed", e);
+        }
+
+        // Re-check git presence after install attempt
+        if (!isGitOnPath()) {
+            throw new RuntimeException("Git installation failed or was not detected after installation attempt.");
+        }
+
+        JavonoLogger.success("Git installation verified.");
+    }
+
+    private static boolean isGitOnPath() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("git", "--version");
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line = reader.readLine();
-                JavonoLogger.info("Git --version output: " + line);
-                if (line != null && line.toLowerCase().contains("git version")) {
-                    JavonoLogger.info("Git version detected successfully.");
-                    return true;
-                } else {
-                    JavonoLogger.info("Git --version output did NOT contain expected text.");
-                }
+                String output = reader.readLine();
+                return output != null && output.toLowerCase(Locale.ENGLISH).contains("git version");
+            } finally {
+                process.waitFor();
             }
-            process.waitFor();
         } catch (Exception e) {
-            JavonoLogger.info("Exception when running git --version:");
-            e.printStackTrace();
+            JavonoLogger.warn("Exception checking git presence: " + e.getMessage());
             return false;
         }
-
-        JavonoLogger.info("Git executable found but did not behave as expected.");
-        return false;
     }
 
-    public static Path getGitExecutablePath() {
-        if (isWindows()) {
-            return ESP_IDF_PATH.resolve("cmd").resolve("git.exe");
-        } else {
-            return ESP_IDF_PATH.resolve("bin").resolve("git");
+    private static void installPortableGitWindows() throws IOException, InterruptedException {
+        Path gitExePath = getGitExecutablePath();
+        Path downloadFile = espIdfPath.resolve(getDownloadFilename());
+
+        if (Files.exists(gitExePath)) {
+            JavonoLogger.success("Portable Git already installed at: " + gitExePath);
+            return;
         }
-    }
 
-    // ----------------- OS & Paths -----------------
+        if (Files.exists(downloadFile)) {
+            JavonoLogger.warn("Previous archive found. Deleting...");
+            Files.delete(downloadFile);
+        }
 
-    private static boolean isWindows() {
-        return detectOS().equals("windows");
-    }
+        String downloadUrl = getDownloadUrl();
+        JavonoLogger.info("Downloading Portable Git from: " + downloadUrl);
+        FileDownloader.downloadWithResume(downloadUrl, downloadFile);
 
-    private static String detectOS() {
-        String os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
-        if (os.contains("win")) return "windows";
-        if (os.contains("mac")) return "macos";
-        if (os.contains("nix") || os.contains("nux") || os.contains("aix")) return "linux";
-        return "unknown";
+        Path oldGitFolder = espIdfPath.resolve("cmd");
+        if (Files.exists(oldGitFolder)) {
+            JavonoLogger.info("Cleaning old Git folder: " + oldGitFolder);
+            deleteRecursively(oldGitFolder);
+        }
+
+        JavonoLogger.info("Extracting Portable Git archive...");
+        extract7zExe(downloadFile, espIdfPath);
+
+        Files.deleteIfExists(downloadFile);
+
+        if (!Files.exists(gitExePath)) {
+            throw new RuntimeException("Portable Git extraction failed, git.exe not found at expected location.");
+        }
+
+        JavonoLogger.success("Portable Git installed at: " + gitExePath);
     }
 
     private static Path getEspIdfPath() {
-        if (detectOS().equals("windows")) {
-            return Paths.get("C:", "Javono", "esp-idf-v5.4.2");
+        String idfPathStr = PathDetector.detectIdfPath();
+        if (idfPathStr == null) {
+            throw new RuntimeException("ESP-IDF path not found! Please ensure ESP-IDF is installed and configured.");
+        }
+        return Path.of(idfPathStr);
+    }
+
+    private static Path getGitExecutablePath() {
+        OS os = OS.detect();
+        if (os == OS.WINDOWS) {
+            return espIdfPath.resolve("cmd").resolve("git.exe");
         } else {
-            return Paths.get(System.getProperty("user.home"), "Javono", "esp-idf-v5.4.2");
+            // For Linux/Mac, system git is expected, no local git executable path
+            return null;
         }
     }
 
-    // ----------------- Download Info -----------------
-
     private static String getDownloadFilename() {
-        return isWindows()
-                ? "PortableGit-2.42.0-64-bit.7z.exe"
-                : "git-2.42.0.tar.xz";
+        OS os = OS.detect();
+        return os == OS.WINDOWS ? "PortableGit-2.42.0-64-bit.7z.exe" : null;
     }
 
     private static String getDownloadUrl() {
-        return isWindows()
+        OS os = OS.detect();
+        return os == OS.WINDOWS
                 ? "https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.1/PortableGit-2.42.0-64-bit.7z.exe"
-                : "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.42.0.tar.xz";
+                : null;
     }
-
-    // ----------------- Extract -----------------
 
     private static void extract7zExe(Path exePath, Path outputDir) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(
@@ -156,22 +152,11 @@ public class GitInstaller {
                 "-o" + outputDir.toAbsolutePath().toString()
         );
         pb.inheritIO();
-        Process p = pb.start();
-        int code = p.waitFor();
-        if (code != 0) throw new IOException("❌ 7z.exe extraction failed with code " + code);
-    }
-
-    private static void extractTarXZ(Path tarFile, Path outputDir) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder(
-                "tar", "-xf",
-                tarFile.toAbsolutePath().toString(),
-                "-C",
-                outputDir.toAbsolutePath().toString()
-        );
-        pb.inheritIO();
-        Process p = pb.start();
-        int code = p.waitFor();
-        if (code != 0) throw new IOException("❌ tar extraction failed with code " + code);
+        Process process = pb.start();
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new IOException("7z.exe extraction failed with exit code " + exitCode);
+        }
     }
 
     private static void deleteRecursively(Path path) throws IOException {

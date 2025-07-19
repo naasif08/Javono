@@ -26,7 +26,7 @@ public class LocalBuilder implements JavonoBuilder {
         }
         BatchBuilder batchBuilder = new BatchBuilder();
         try {
-            batchBuilder.writeBuildScripts(projectDir, PathDetector.detectEsp32Port());
+            batchBuilder.writeBuildScripts(this.projectDir, PathDetector.detectEsp32Port());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -37,9 +37,7 @@ public class LocalBuilder implements JavonoBuilder {
         Esp32Flasher esp32Flasher = new Esp32Flasher();
         try {
             esp32Flasher.flashProject(projectDir);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
 
