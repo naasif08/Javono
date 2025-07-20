@@ -5,7 +5,6 @@ import javono.builder.JavonoBuilder;
 import javono.builder.impl.LocalBuilder;
 import javono.detector.PathDetector;
 import javono.detector.ToolPaths;
-
 import java.io.IOException;
 
 

@@ -54,7 +54,7 @@ public class BatchBuilder {
                 REM Move to project directory
                 cd /d "%s"
                 
-                echo 🚀 Building project...
+                echo Building project...
                 call "%%PYTHON_EXE_PATH%%" "%%IDF_PATH%%\\tools\\idf.py" build
                 if errorlevel 1 (
                     echo ❌ Build failed! Exiting...
@@ -62,7 +62,7 @@ public class BatchBuilder {
                     exit /b 1
                 )
                 
-                echo 📦 Flashing firmware to %s...
+                echo Flashing firmware to %s...
                 call "%%PYTHON_EXE_PATH%%" "%%IDF_PATH%%\\tools\\idf.py" -p %s flash
                 if errorlevel 1 (
                     echo ❌ Flash failed! Exiting...
@@ -70,7 +70,7 @@ public class BatchBuilder {
                     exit /b 1
                 )
                 
-                echo ✅ Operation completed successfully.
+                echo Build and flash completed.
                 """.formatted(
                 IDF_PATH,
                 OPENOCD_SCRIPTS,
@@ -106,7 +106,7 @@ public class BatchBuilder {
                 source "$IDF_PATH/export.sh"
                 
                 # === Build the project ===
-                echo "🔨 Building the project..."
+                echo "Building the project..."
                 idf.py build
                 if [ $? -ne 0 ]; then
                     echo "❌ Build failed!"
@@ -127,7 +127,7 @@ public class BatchBuilder {
                     exit 1
                 fi
                 
-                echo "✅ Build and flash completed."
+                echo "Build and flash completed."
                 
                 """.formatted(
                 ToolPaths.idfPath,
