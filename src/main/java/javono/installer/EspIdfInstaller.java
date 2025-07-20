@@ -14,6 +14,18 @@ import java.nio.file.Paths;
 
 public class EspIdfInstaller {
 
+    public static boolean isIdfInstalled() {
+        OS os = OS.detect();
+        if (os == OS.WINDOWS) {
+            return isInstalledForWindows();
+        } else if (os == OS.LINUX) {
+            return isInstalledForLinux();
+        } else if (os == OS.MACOS) {
+            return isInstalledForMac();
+        }
+        return false;
+    }
+
     public static boolean isInstalledForWindows() {
         if (PathDetector.detectIdfPath() != null) {
             Path idfPath = Path.of(PathDetector.detectIdfPath());
@@ -67,38 +79,35 @@ public class EspIdfInstaller {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("nux")) {
-            return isInstalledLinux();
+            return isInstalledForLinux();
         } else if (os.contains("mac")) {
-            return isInstalledMac();
+            return isInstalledForMac();
         } else {
             JavonoLogger.error("Unsupported OS for ESP-IDF install check.");
             return false;
         }
     }
 
-    private static boolean isInstalledLinux() {
-        String idfPath = System.getProperty("user.home") + "/.espressif";
-        File idfFolder = new File(idfPath);
-        File idfPy = new File(idfPath + "/python_env/bin/idf.py");
+    public static boolean isInstalledForLinux() {
+        String path = System.getProperty("user.home") + "/Javono";
+        File javonoFolder = new File(path);
+        File installFile = new File(path + "/esp-idf/install.sh");
 
-        return idfFolder.exists() && idfPy.exists() && idfPy.canExecute();
+        return javonoFolder.exists() && installFile.exists() && installFile.canExecute();
     }
 
-    private static boolean isInstalledMac() {
+    public static boolean isInstalledForMac() {
         // Assuming default install path for macOS
-        String idfPath = System.getProperty("user.home") + "/.espressif";
-        File idfFolder = new File(idfPath);
-        File idfPy = new File(idfPath + "/python_env/bin/idf.py");
-
-        return idfFolder.exists() && idfPy.exists() && idfPy.canExecute();
+        String path = System.getProperty("user.home") + "/Javono";
+        File javonoFolder = new File(path);
+        File installFile = new File(path + "/esp-idf/install.sh");
+        return javonoFolder.exists() && installFile.exists() && installFile.canExecute();
     }
 
     // Optionally verify by actually running idf.py --version
     public static boolean verifyByCommand() {
         try {
-            Process process = new ProcessBuilder("idf.py", "--version")
-                    .redirectErrorStream(true)
-                    .start();
+            Process process = new ProcessBuilder("idf.py", "--version").redirectErrorStream(true).start();
             int exitCode = process.waitFor();
             return exitCode == 0;
         } catch (IOException | InterruptedException e) {

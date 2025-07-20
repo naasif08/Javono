@@ -100,7 +100,7 @@ public class BatchBuilder {
                 
                 # === Configuration ===
                 IDF_PATH="%s"
-                PROJECT_DIR=$(pwd)
+                PROJECT_DIR="%s"
                 
                 # Load ESP-IDF environment
                 source "$IDF_PATH/export.sh"
@@ -114,14 +114,14 @@ public class BatchBuilder {
                 fi
                 
                 # === Flash the project ===
-                COM_PORT="$1"
+                COM_PORT="%s"
                 if [ -z "$COM_PORT" ]; then
                     echo "❌ COM port not specified. Usage: $0 <com_port>"
                     exit 1
                 fi
                 
-                echo "🚀 Flashing to $COM_PORT..."
-                idf.py -p "$COM_PORT" flash
+                echo "🚀 Flashing to $COM_PORT..."                
+                idf.py -p "$COM_PORT" flash              
                 if [ $? -ne 0 ]; then
                     echo "❌ Flash failed!"
                     exit 1

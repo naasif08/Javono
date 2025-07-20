@@ -29,8 +29,7 @@ public class PathDetector {
     }
 
     private static Path getDefaultPath() {
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
+        if (OS.detect().isWindows()) {
             return Paths.get("C:", "Javono", "esp-idf-" + VERSION);
         } else {
             return Paths.get(System.getProperty("user.home"), "Javono");
@@ -47,22 +46,38 @@ public class PathDetector {
             toolPath = searchFileRecursively(IDF_ROOT.toFile(), executableName);
         } else {
             toolPath = searchFileRecursively(getDefaultPath().toFile(), executableName);
+            if (toolPath == null || toolPath.equals("null")) {
+                toolPath = searchFileRecursively(Paths.get(System.getProperty("user.home"), ".espressif").toFile(), executableName);
+            }
         }
         return (toolPath != null) ? toolPath.getParent() : null;
     }
 
     public static String detectPythonPath() {
-        return detectTool(isWindows() ? "python.exe" : "python");
+        if (OS.detect().isWindows()) {
+            return detectTool("python");
+        } else {
+            try {
+                return getSystemPath("python3");
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
     public static String detectPythonExecutable() {
         File file;
         if (OS.detect().isWindows()) {
-            file = searchFileRecursively(IDF_ROOT.toFile(), isWindows() ? "python.exe" : "python");
+            file = searchFileRecursively(IDF_ROOT.toFile(), "python.exe");
+            return (file != null) ? file.getAbsolutePath() : null;
         } else {
-            file = searchFileRecursively(getDefaultPath().toFile(), isWindows() ? "python.exe" : "python");
+            try {
+                return getSystemPath("python3");
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
-        return (file != null) ? file.getAbsolutePath() : null;
     }
 
     public static String detectToolchainBin() {
@@ -136,7 +151,11 @@ public class PathDetector {
             String desc = port.getDescriptivePortName().toLowerCase();
             String name = port.getSystemPortName().toLowerCase();
             if (desc.contains("ch340") || desc.contains("usb serial") || desc.contains("cp210x") || desc.contains("ftdi") || name.contains("usbserial") || name.contains("ttyusb") || name.contains("cu.usbserial")) {
-                return port.getSystemPortName();
+                if (OS.detect().isWindows()) {
+                    return port.getSystemPortName();
+                } else {
+                    return "/dev/" + port.getSystemPortName();
+                }
             }
         }
         return null;

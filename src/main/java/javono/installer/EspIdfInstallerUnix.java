@@ -12,6 +12,7 @@ public class EspIdfInstallerUnix {
         String fullCommand = String.join(" && ", List.of(
                 "sudo apt update",
                 "sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util",
+                "sudo usermod -aG dialout $(whoami)",
                 "mkdir -p " + espDir,
                 "cd " + espDir,
                 "git clone -b v5.4.2 --recursive https://github.com/espressif/esp-idf.git",
@@ -40,7 +41,7 @@ public class EspIdfInstallerUnix {
     }
 
     public static void installForMacOS() {
-        String espDir = System.getProperty("user.home") + "/esp";
+        String espDir = System.getProperty("user.home") + "/Javono";
 
         // Compose the full shell script to run inside Terminal.app
         String commands = String.join(" && ", List.of(
@@ -78,9 +79,9 @@ public class EspIdfInstallerUnix {
             builder.inheritIO();
             Process process = builder.start();
             int exitCode = process.waitFor();
-            System.out.println("ESP-IDF installation terminal closed with exit code " + exitCode);
+            JavonoLogger.info("ESP-IDF installation terminal closed with exit code " + exitCode);
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            JavonoLogger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
         }
     }
 }

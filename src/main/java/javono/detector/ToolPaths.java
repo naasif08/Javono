@@ -60,7 +60,7 @@ public final class ToolPaths {
         constraintsPath = PathDetector.getConstraintFilePath();
 
         loadPropertiesOverrides();
-        //validatePaths();
+        validatePaths();
 
         initialized = true;
     }
