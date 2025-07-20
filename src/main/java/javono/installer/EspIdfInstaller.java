@@ -3,6 +3,7 @@ package javono.installer;
 import javono.detector.OS;
 import javono.detector.PathDetector;
 import javono.logger.JavonoLogger;
+import javono.main.JavonoBootstrap;
 import javono.utils.FileDownloader;
 import javono.utils.ZipExtractor;
 
@@ -11,6 +12,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static javono.detector.PathDetector.VERSION;
 
 public class EspIdfInstaller {
 
@@ -27,18 +30,20 @@ public class EspIdfInstaller {
     }
 
     public static boolean isInstalledForWindows() {
-        if (PathDetector.detectIdfPath() != null) {
-            Path idfPath = Path.of(PathDetector.detectIdfPath());
-            return !Files.exists(idfPath) || !Files.exists(idfPath.resolve("install.bat")); // Windows check
-        }
-        return true;
+        String path = Paths.get("C:", "Javono").toString();
+        File javonoFolder = new File(path);
+        File installFile = new File(path + "/installcomplete.txt");
+        return javonoFolder.exists() && installFile.exists() && installFile.canExecute();
     }
 
     public static void downloadAndInstall() throws IOException {
         String url = "https://dl.espressif.com/github_assets/espressif/esp-idf/releases/download/v5.4.2/esp-idf-v5.4.2.zip";
         Path zipPath = getJavonoFolder().resolve("esp-idf.zip");
+        Path completeFlag = Path.of(getJavonoFolder().toString() + "//esp-idf-" + VERSION).resolve("complete.txt");
+        File file = completeFlag.toFile();
 
         if (!zipPath.getParent().toFile().exists()) Files.createDirectory(zipPath.getParent());
+        if (file.exists()) return;
 
         Path targetDir = zipPath.getParent();
 
@@ -55,6 +60,12 @@ public class EspIdfInstaller {
             throw new RuntimeException("❌ Installation failed: " + e.getMessage());
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        }
+        Path flagFile = Paths.get(EspIdfInstaller.getJavonoFolder().toString(), "esp-idf-v5.4.2", "complete.txt");
+        try {
+            Files.writeString(flagFile, "Extraction completed successfully.\n");
+        } catch (IOException e) {
+            JavonoLogger.error("Failed to create complete.txt: " + e.getMessage());
         }
     }
 
@@ -91,8 +102,7 @@ public class EspIdfInstaller {
     public static boolean isInstalledForLinux() {
         String path = System.getProperty("user.home") + "/Javono";
         File javonoFolder = new File(path);
-        File installFile = new File(path + "/esp-idf/install.sh");
-
+        File installFile = new File(path + "/installcomplete.txt");
         return javonoFolder.exists() && installFile.exists() && installFile.canExecute();
     }
 
@@ -100,7 +110,7 @@ public class EspIdfInstaller {
         // Assuming default install path for macOS
         String path = System.getProperty("user.home") + "/Javono";
         File javonoFolder = new File(path);
-        File installFile = new File(path + "/esp-idf/install.sh");
+        File installFile = new File(path + "/installcomplete.txt");
         return javonoFolder.exists() && installFile.exists() && installFile.canExecute();
     }
 

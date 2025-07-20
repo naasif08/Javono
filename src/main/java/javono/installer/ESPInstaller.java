@@ -77,9 +77,21 @@ public class ESPInstaller {
         // Optional: make Python and Git portable on Windows
         if (os == OS.WINDOWS) {
             pb.environment().put("PYTHON", PYTHON_PATH.toString());
-            String originalPath = System.getenv("PATH");
-            String combinedPythonAndGit = PYTHON_PATH.getParent() + ";" + GIT_PATH + ";" + originalPath;
-            pb.environment().put("PATH", combinedPythonAndGit);
+            Path miniconda = ESP_IDF_PATH.resolve("miniconda");
+            Path scripts = miniconda.resolve("Scripts");
+            Path libBin = miniconda.resolve("Library").resolve("bin");
+
+            String newPath = String.join(";",
+                    miniconda.toString(),
+                    scripts.toString(),
+                    libBin.toString(),
+                    GIT_PATH.toString(),
+                    System.getenv("PATH")
+            );
+
+            pb.environment().put("PATH", newPath);
+            pb.environment().put("PYTHON", miniconda.resolve("python.exe").toString());
+
         }
 
         int exitCode = pb.start().waitFor();

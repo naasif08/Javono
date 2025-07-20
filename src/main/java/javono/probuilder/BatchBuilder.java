@@ -120,7 +120,7 @@ public class BatchBuilder {
                     exit 1
                 fi
                 
-                echo "🚀 Flashing to $COM_PORT..."                
+                echo "Flashing to $COM_PORT..."                
                 idf.py -p "$COM_PORT" flash              
                 if [ $? -ne 0 ]; then
                     echo "❌ Flash failed!"

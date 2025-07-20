@@ -55,7 +55,7 @@ public class PathDetector {
 
     public static String detectPythonPath() {
         if (OS.detect().isWindows()) {
-            return detectTool("python");
+            return detectTool("python.exe");
         } else {
             try {
                 return getSystemPath("python3");
