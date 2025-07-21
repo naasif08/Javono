@@ -49,7 +49,7 @@ public class EspIdfInstaller {
             ZipExtractor.extract(zipPath, targetDir); // extract into /Javono/
 
             Files.delete(zipPath); // optional cleanup
-            JavonoLogger.success("ESP-IDF installed at: " + targetDir);
+            JavonoLogger.success("Extracted at: " + targetDir);
         } catch (IOException e) {
             throw new RuntimeException("❌ Installation failed: " + e.getMessage());
         } catch (InterruptedException e) {
