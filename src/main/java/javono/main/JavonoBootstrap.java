@@ -27,6 +27,8 @@ public class JavonoBootstrap {
                 }
                 if (!EspIdfInstaller.isInstalledForWindows()) {
                     throw new RuntimeException("ESP-IDF installation failed or incomplete.");
+                } else {
+                    JavonoLogger.success("Esp IDF already installed.");
                 }
 
             } else if (currentOS == OS.LINUX) {
@@ -38,6 +40,8 @@ public class JavonoBootstrap {
                 // After terminal install finishes, you might want to verify installation again
                 if (!EspIdfInstaller.isInstalledForLinux()) {
                     throw new RuntimeException("ESP-IDF installation failed or incomplete.");
+                } else {
+                    JavonoLogger.success("Esp IDF already installed.");
                 }
 
             } else if (currentOS == OS.MACOS) {
@@ -48,6 +52,8 @@ public class JavonoBootstrap {
                 }
                 if (!EspIdfInstaller.isInstalledForMac()) {
                     throw new RuntimeException("ESP-IDF installation failed or incomplete.");
+                } else {
+                    JavonoLogger.success("Esp IDF already installed.");
                 }
             } else {
                 throw new UnsupportedOperationException("Unsupported OS: " + currentOS);

@@ -96,9 +96,9 @@ public class ESPInstaller {
 
         int exitCode = pb.start().waitFor();
         if (exitCode != 0) {
-            throw new IOException("Install script failed with exit code: " + exitCode);
+            JavonoLogger.error("Install script exited with code " + exitCode);
+            throw new RuntimeException("ESP-IDF installation failed or incomplete.");
         }
-
 
         JavonoLogger.success("ESP-IDF install script completed successfully.");
     }

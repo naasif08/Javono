@@ -5,6 +5,8 @@ import javono.logger.JavonoLogger;
 import java.io.IOException;
 import java.util.List;
 
+import static javono.detector.PathDetector.VERSION;
+
 public class EspIdfInstallerUnix {
 
     public static void installForLinux() {
@@ -13,13 +15,17 @@ public class EspIdfInstallerUnix {
                 "sudo apt update",
                 "sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util",
                 "sudo usermod -aG dialout $(whoami)",
+                "sudo apt install -y python3.12-venv",
                 "mkdir -p " + espDir,
                 "cd " + espDir,
-                "git clone -b v5.4.2 --recursive https://github.com/espressif/esp-idf.git",
+                "[ -d \\\"esp-idf\\\" ] || git clone -b " + VERSION + " --recursive https://github.com/espressif/esp-idf.git",
                 "cd esp-idf",
                 "./install.sh esp32",
                 "source export.sh",
-                "exec bash"
+                "echo 'ESP-IDF setup completed successfully.'",
+                "read -p 'Press Enter to exit...'",
+                "exit 0"
+
         ));
 
         List<String> command = List.of(
@@ -32,9 +38,11 @@ public class EspIdfInstallerUnix {
             builder.inheritIO();
             Process process = builder.start();
 
-            int exitCode = process.waitFor(); // Wait for terminal to close
-            JavonoLogger.info("ESP-IDF installation flow finished (or user closed the terminal). Exit code: " + exitCode);
-
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                JavonoLogger.error("Install script exited with code " + exitCode);
+                throw new RuntimeException("ESP-IDF installation failed or incomplete.");
+            }
         } catch (IOException | InterruptedException e) {
             JavonoLogger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
         }
@@ -54,7 +62,7 @@ public class EspIdfInstallerUnix {
                 // Step 2: Create esp dir and clone ESP-IDF
                 "mkdir -p " + espDir,
                 "cd " + espDir,
-                "git clone -b v5.4.2 --recursive https://github.com/espressif/esp-idf.git",
+                "git clone -b " + VERSION + " --recursive https://github.com/espressif/esp-idf.git",
                 "cd esp-idf",
                 // Step 3: Run install.sh for esp32 target
                 "./install.sh esp32",
