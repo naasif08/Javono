@@ -1,5 +1,6 @@
 package javono.main;
 
+import javono.annotations.JavonoSketch;
 import javono.detector.OS;
 import javono.detector.PathDetector;
 import javono.installer.*;
@@ -11,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@JavonoSketch
 public class JavonoBootstrap {
     public static void runFirstTimeSetupLocal() throws IOException, InterruptedException {
         OS currentOS = OS.detect();

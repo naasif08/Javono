@@ -1,6 +1,8 @@
 package javono.main;
 
 
+import javono.annotations.JavonoLoop;
+import javono.annotations.JavonoSketch;
 import javono.builder.JavonoBuilder;
 import javono.builder.impl.LocalBuilder;
 import javono.detector.PathDetector;
