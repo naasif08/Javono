@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
-@Target(ElementType.METHOD) // Method-level
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.METHOD)
 public @interface JavonoSetup {
 }
