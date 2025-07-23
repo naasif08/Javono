@@ -7,6 +7,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
+import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -66,6 +67,8 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
             if (sketchClass instanceof TypeElement) {
                 TypeElement typeElement = (TypeElement) sketchClass;
 
+                validateUnannotatedMethods(typeElement);
+
                 // Check for extends (other than Object)
                 String superClassName = typeElement.getSuperclass().toString();
                 if (!superClassName.equals("java.lang.Object")) {
@@ -83,7 +86,6 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
                             sketchClass);
                 }
             }
-
 
 
             // Validate @JavonoSetup methods
@@ -219,6 +221,26 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
 
 
     // Getters and setters
+    private void validateUnannotatedMethods(TypeElement sketchClass) {
+        List<? extends Element> enclosedElements = sketchClass.getEnclosedElements();
+
+        for (Element element : enclosedElements) {
+            if (element.getKind() == ElementKind.METHOD) {
+                boolean isAnnotated = element.getAnnotation(JavonoLoop.class) != null
+                        || element.getAnnotation(JavonoSetup.class) != null
+                        || element.getAnnotation(JavonoCustomMethod.class) != null;
+
+                if (!isAnnotated) {
+                    processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "[Javono] Every method inside a @JavonoSketch class must be annotated with @JavonoLoop, @JavonoSetup, or @JavonoCustomMethod.",
+                            element
+                    );
+                }
+            }
+        }
+    }
+
 
     public boolean isLoopFound() {
         return loopFound;

@@ -10,14 +10,13 @@ import javono.builder.JavonoBuilder;
 public class Blinky {
 
 
-    @JavonoLoop
+    @JavonoSetup
     private void setUp() {
-
 
     }
 
 
-    @JavonoSetup
+    @JavonoLoop
     private void loop() {
 
     }
@@ -26,6 +25,7 @@ public class Blinky {
     private int myCustomMethod2() {
         return 0;
     }
+
 
     @JavonoCustomMethod
      private char myCustomMethod() {
