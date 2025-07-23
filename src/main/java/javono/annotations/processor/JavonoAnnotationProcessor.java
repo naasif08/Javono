@@ -33,7 +33,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
             if (allSketches.size() != 1) {
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
-                        "Exactly one class must be annotated with @JavonoSketch, found: " + allSketches.size());
+                        "[Javono] Exactly one class must be annotated with @JavonoSketch, found: " + allSketches.size());
             }
             return false;
         }
@@ -45,7 +45,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
         if (allSketches.size() > 1) {
             processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.ERROR,
-                    "More than one class annotated with @JavonoSketch found.");
+                    "[Javono] More than one class annotated with @JavonoSketch found.");
             // We continue processing to show more errors, but this is a fatal situation
         }
 
@@ -58,7 +58,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
             if (setupMethods.size() != 1) {
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
-                        "Exactly one method must be annotated with @JavonoSetup, found: " + setupMethods.size());
+                        "[Javono] Exactly one method must be annotated with @JavonoSetup, found: " + setupMethods.size());
             }
             for (Element setup : setupMethods) {
                 validateMethodInSketchClass(setup, sketchClass, "@JavonoSetup");
@@ -71,7 +71,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
             if (loopMethods.size() != 1) {
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
-                        "Exactly one method must be annotated with @JavonoLoop, found: " + loopMethods.size());
+                        "[Javono] Exactly one method must be annotated with @JavonoLoop, found: " + loopMethods.size());
             }
             for (Element loop : loopMethods) {
                 validateMethodInSketchClass(loop, sketchClass, "@JavonoLoop");
@@ -85,7 +85,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
                 if (!custom.getEnclosingElement().equals(sketchClass)) {
                     processingEnv.getMessager().printMessage(
                             Diagnostic.Kind.ERROR,
-                            "@JavonoCustomMethod methods must be inside the @JavonoSketch class",
+                            "[Javono] @JavonoCustomMethod methods must be inside the @JavonoSketch class",
                             custom);
                 }
             }
@@ -98,13 +98,13 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
         if (!method.getEnclosingElement().equals(sketchClass)) {
             processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.ERROR,
-                    annotationName + " method must be inside the @JavonoSketch class",
+                    "[Javono] " + annotationName + " method must be inside the @JavonoSketch class",
                     method);
         }
         if (method.getKind() != ElementKind.METHOD) {
             processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.ERROR,
-                    annotationName + " can only be applied to methods",
+                    "[Javono] " + annotationName + " can only be applied to methods",
                     method);
         }
     }
@@ -115,7 +115,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
             if (executable.getReturnType().getKind() != TypeKind.VOID) {
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
-                        annotationName + " method must have void return type",
+                        "[Javono] " + annotationName + " method must have only void return type",
                         method);
             }
         }

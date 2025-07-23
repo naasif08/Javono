@@ -10,22 +10,25 @@ public class Blinky {
 
 
     @JavonoSetup
-    void myMethod() {
+    void setUp() {
 
-        myCustomMethod();
+
     }
 
     @JavonoLoop
-    void myMethodLoop() {
+    void loop() {
+
 
     }
 
     @JavonoCustomMethod
     private void myCustomMethod2() {
+
     }
 
     @JavonoCustomMethod
     private void myCustomMethod() {
+
     }
 
 }
