@@ -1,6 +1,7 @@
 package javono.main;
 
 
+import javono.annotations.JavonoSketch;
 import javono.detector.OS;
 import javono.detector.PathDetector;
 import javono.installer.*;

@@ -9,16 +9,15 @@ import javono.annotations.JavonoLoop;
 public class Blinky {
 
 
-
     @JavonoSetup
     void myMethod() {
 
+        myCustomMethod();
     }
 
     @JavonoLoop
     void myMethodLoop() {
 
-        myCustomMethod();
     }
 
     @JavonoCustomMethod
