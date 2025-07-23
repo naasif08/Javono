@@ -228,6 +228,32 @@ public class SketchValidator {
                             System.err.println("[Javono] Inside @JavonoSketch class every method must be annotated.");
                             System.exit(1);
                         } else {
+                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoCustomMethod.class)
+                                    .forEach(customMethod -> {
+                                        boolean isSetupMethodCalledFromCustomMethod = clazz.getMethods().stream().anyMatch(
+                                                methodDeclaration -> methodDeclaration.isAnnotationPresent(JavonoSetup.class) &&
+                                                        methodDeclaration.getNameAsString().equals(customMethod)
+                                        );
+
+                                        boolean isLoopMethodCalledFromCustomMethod = clazz.getMethods().stream().anyMatch(
+                                                methodDeclaration -> methodDeclaration.isAnnotationPresent(JavonoLoop.class) &&
+                                                        methodDeclaration.getNameAsString().equals(customMethod)
+                                        );
+
+
+                                        if (isSetupMethodCalledFromCustomMethod) {
+                                            System.err.println("[Javono] Nope! @JavonoSetup can't be summoned like a Pokémon from a @JavonoCustomMethod.");
+                                            System.err.println("[Javono] Let the setup method do set up things. You do you.");
+
+                                            System.exit(1);
+                                        }
+
+                                        if (isLoopMethodCalledFromCustomMethod) {
+                                            System.err.println("[Javono] Nope! @JavonoLoop can't be summoned like a Pokémon from a @JavonoCustomMethod.");
+                                            System.err.println("[Javono] Let the loop do the looping. You do you.");
+                                            System.exit(1);
+                                        }
+                                    });
                             boolean isRecursionFoundInsideCustomMethod = clazz.getMethods().stream().anyMatch(
                                     methodDeclaration ->
                                             methodDeclaration.getBody().isPresent() &&

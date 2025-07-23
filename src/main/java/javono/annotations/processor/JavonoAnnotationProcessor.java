@@ -52,6 +52,39 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
         if (allSketches.size() == 1) {
             setJavonoSketchFound(true);
             Element sketchClass = allSketches.iterator().next();
+            if (!sketchClass.getModifiers().contains(Modifier.PUBLIC)) {
+                processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "[Javono] @JavonoSketch class must be public.");
+            }
+            if (sketchClass.getModifiers().contains(Modifier.ABSTRACT)) {
+                processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "[Javono] @JavonoSketch class must not be abstract.");
+            }
+
+            if (sketchClass instanceof TypeElement) {
+                TypeElement typeElement = (TypeElement) sketchClass;
+
+                // Check for extends (other than Object)
+                String superClassName = typeElement.getSuperclass().toString();
+                if (!superClassName.equals("java.lang.Object")) {
+                    processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "[Javono] Classes annotated with @JavonoSketch cannot extend other classes. Please keep it standalone.",
+                            sketchClass);
+                }
+
+                // Check for implements
+                if (!typeElement.getInterfaces().isEmpty()) {
+                    processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "[Javono] Classes annotated with @JavonoSketch cannot implement interfaces. Keep it simple and pure!",
+                            sketchClass);
+                }
+            }
+
+
 
             // Validate @JavonoSetup methods
             Set<? extends Element> setupMethods = roundEnv.getElementsAnnotatedWith(JavonoSetup.class);
@@ -89,6 +122,34 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
                             custom);
                 }
             }
+
+            for (Element custom : customMethods) {
+                if (!custom.getEnclosingElement().equals(sketchClass)) {
+                    processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "[Javono] @JavonoCustomMethod methods must be inside the @JavonoSketch class",
+                            custom);
+                }
+
+                // Check that the method is private
+                Set<Modifier> modifiers = custom.getModifiers();
+                if (!modifiers.contains(Modifier.PRIVATE)) {
+                    processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "[Javono] @JavonoCustomMethod methods must be private",
+                            custom);
+                }
+
+                // Check that the method is NOT static
+                if (modifiers.contains(Modifier.STATIC)) {
+                    processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "[Javono] @JavonoCustomMethod methods must NOT be static",
+                            custom);
+                }
+            }
+
+
         }
 
         return true;
@@ -112,14 +173,50 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
     private void validateVoidMethod(Element method, String annotationName) {
         if (method.getKind() == ElementKind.METHOD) {
             ExecutableElement executable = (ExecutableElement) method;
+
+            // Check return type
             if (executable.getReturnType().getKind() != TypeKind.VOID) {
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
-                        "[Javono] " + annotationName + " method must have only void return type",
+                        "[Javono] " + annotationName + " method must have a void return type.",
                         method);
             }
+
+            // Check if method is private
+            if (!method.getModifiers().contains(Modifier.PRIVATE)) {
+                processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "[Javono] " + annotationName + " method must be private. Keep it secret, keep it safe.",
+                        method);
+            }
+
+            if (!executable.getParameters().isEmpty()) {
+                processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "[Javono] " + annotationName + " method must not take any parameters.",
+                        method);
+            }
+            long count = method.getAnnotationMirrors().stream()
+                    .filter(mirror -> mirror.getAnnotationType().toString().startsWith("javono.annotations"))
+                    .count();
+            if (count > 1) {
+                processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "[Javono] A method must not have multiple Javono annotations.",
+                        method);
+            }
+
+            if (method.getModifiers().contains(Modifier.STATIC)) {
+                processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "[Javono] @" + annotationName + " methods must not be static.",
+                        method);
+            }
+
+
         }
     }
+
 
     // Getters and setters
 
