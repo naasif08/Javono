@@ -1,8 +1,6 @@
 package javono.main;
 
-import javono.annotations.JavonoLoop;
-import javono.annotations.JavonoSetup;
-import javono.annotations.JavonoSketch;
+import javono.annotations.*;
 import javono.annotations.JavonoLoop;
 import javono.lib.GPIO;
 
@@ -18,7 +16,7 @@ public class Blinky {
     private GPIO gpio;
 
     @JavonoSetup
-    private  void setUp() {
+    private void setUp() {
     }
 
 
