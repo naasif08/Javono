@@ -254,6 +254,15 @@ public class SketchValidator {
                                             System.exit(1);
                                         }
                                     });
+
+
+                            boolean isConstructorFound = !clazz.getConstructors().isEmpty();
+                            if (isConstructorFound) {
+                                System.err.println("[Javono] Sketch class must not declare any constructors. Please remove it and use @JavonoSetup instead.\n");
+                                System.exit(1);
+                            }
+
+
                             boolean isRecursionFoundInsideCustomMethod = clazz.getMethods().stream().anyMatch(
                                     methodDeclaration ->
                                             methodDeclaration.getBody().isPresent() &&
