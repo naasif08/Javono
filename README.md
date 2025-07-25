@@ -11,7 +11,37 @@ Javono converts a restricted subset of Java into efficient C code suitable for b
 - Write Java code with `setup()` and `loop()` methods  
 - Support for multiple embedded platforms  
 - Simple and extensible framework  
-- Efficient Java-to-C integration under the hood  
+- Efficient Java-to-C integration under the hood
+
+## How It Works
+
+Javono lets you write embedded programs in simplified Java using two familiar methods: `setup()` and `loop()` — just like Arduino. Your Java code is then converted into equivalent C code, which can be compiled and flashed to a microcontroller (e.g., ESP32) using the ESP-IDF toolchain.
+
+### Example
+### Example
+
+```java
+import javono.lib.GPIO;
+import javono.lib.Javono;
+
+@JavonoSketch
+public class BlinkExample {
+
+    @JavonoSetup
+    public void setup() {
+        GPIO.pinMode(2, GPIO.OUTPUT); // Set GPIO2 (built-in LED) as output
+    }
+
+    @JavonoLoop
+    public void loop() {
+        GPIO.digitalWrite(2, true);   // Turn LED on
+        Javono.delay(500);             // Wait 500 ms
+        GPIO.digitalWrite(2, false);  // Turn LED off
+        Javono.delay(500);             // Wait 500 ms
+    }
+}
+
+
 
 
 ## License
