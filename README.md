@@ -18,7 +18,6 @@ Javono converts a restricted subset of Java into efficient C code suitable for b
 Javono lets you write embedded programs in simplified Java using two familiar methods: `setup()` and `loop()` — just like Arduino. Your Java code is then converted into equivalent C code, which can be compiled and flashed to a microcontroller (e.g., ESP32) using the ESP-IDF toolchain.
 
 ### Example
-### Example
 
 ```java
 import javono.lib.GPIO;
