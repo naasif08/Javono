@@ -28,15 +28,12 @@ public class BlinkExample {
 
     @JavonoSetup
     public void setup() {
-        GPIO.pinMode(2, GPIO.OUTPUT); // Set GPIO2 (built-in LED) as output
+
     }
 
     @JavonoLoop
     public void loop() {
-        GPIO.digitalWrite(2, true);   // Turn LED on
-        Javono.delay(500);             // Wait 500 ms
-        GPIO.digitalWrite(2, false);  // Turn LED off
-        Javono.delay(500);             // Wait 500 ms
+
     }
 }
 ```
