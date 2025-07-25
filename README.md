@@ -39,9 +39,7 @@ public class BlinkExample {
         Javono.delay(500);             // Wait 500 ms
     }
 }
-
-
-
+```
 
 ## License
 
