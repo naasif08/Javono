@@ -6,6 +6,7 @@ import javono.detector.ToolPaths;
 import javono.flasher.Esp32Flasher;
 import javono.probuilder.BatchBuilder;
 import javono.probuilder.ProjectCreator;
+import javono.validator.SketchValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +16,10 @@ public class LocalBuilder implements JavonoBuilder {
     private File projectDir;
 
     @Override
-    public void buildProject() {
+    public JavonoBuilder build() {
+
+        SketchValidator.getInstance().validateProject();
+
         if (!ToolPaths.isInitialized()) {
             ToolPaths.init();
         }
@@ -30,26 +34,27 @@ public class LocalBuilder implements JavonoBuilder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return this;
     }
 
     @Override
-    public void flashFirmware() {
+    public JavonoBuilder flash() {
         Esp32Flasher esp32Flasher = new Esp32Flasher();
         try {
             esp32Flasher.flashProject(projectDir);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-
+        return this;
     }
 
     @Override
-    public void clean() {
-
+    public JavonoBuilder clean() {
+        return this;
     }
 
     @Override
-    public void setOption(String key, String value) {
-
+    public JavonoBuilder setOption(String key, String value) {
+        return this;
     }
 }

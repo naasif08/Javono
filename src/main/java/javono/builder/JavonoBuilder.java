@@ -2,11 +2,8 @@ package javono.builder;
 
 public interface JavonoBuilder {
 
-    void buildProject();
-
-    void flashFirmware();
-
-    void clean();
-
-    void setOption(String key, String value);
+    JavonoBuilder build();         // replaces buildProject()
+    JavonoBuilder flash();         // replaces flashFirmware()
+    JavonoBuilder clean();
+    JavonoBuilder setOption(String key, String value);
 }

@@ -18,16 +18,22 @@ import java.nio.file.Path;
 public class RemoteBuilder implements JavonoBuilder {
 
 
-    private final String githubRepoUrl;
-    private final String githubAccessToken;
+    private String githubRepoUrl;
+    private String githubAccessToken;
     private File projectDir;
+
+    public RemoteBuilder() {
+
+    }
 
     public RemoteBuilder(String githubRepoUrl, String githubAccessToken) {
         this.githubRepoUrl = githubRepoUrl;
         this.githubAccessToken = githubAccessToken;
     }
 
-    public void buildProject() {
+
+    @Override
+    public JavonoBuilder build() {
         if (!ToolPaths.isInitialized()) {
             ToolPaths.init();
         }
@@ -42,10 +48,11 @@ public class RemoteBuilder implements JavonoBuilder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return this;
     }
 
     @Override
-    public void flashFirmware() {
+    public JavonoBuilder flash() {
         try {
             Path firmwareDir = ToolPaths.getDotJavonoDir().toPath().resolve("firmware");
             Files.createDirectories(firmwareDir);
@@ -69,16 +76,16 @@ public class RemoteBuilder implements JavonoBuilder {
         } catch (Exception e) {
             throw new RuntimeException("❌ Remote flashing failed.", e);
         }
-    }
-
-
-    @Override
-    public void clean() {
-
+        return this;
     }
 
     @Override
-    public void setOption(String key, String value) {
+    public JavonoBuilder clean() {
+        return this;
+    }
 
+    @Override
+    public JavonoBuilder setOption(String key, String value) {
+        return this;
     }
 }

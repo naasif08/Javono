@@ -1,9 +1,7 @@
 package javono.installer;
 
 import javono.detector.OS;
-import javono.detector.PathDetector;
 import javono.logger.JavonoLogger;
-import javono.main.JavonoBootstrap;
 import javono.utils.FileDownloader;
 import javono.utils.ZipExtractor;
 

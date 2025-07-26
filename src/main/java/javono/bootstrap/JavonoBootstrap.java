@@ -1,7 +1,6 @@
-package javono.main;
+package javono.bootstrap;
 
 
-import javono.annotations.JavonoSketch;
 import javono.detector.OS;
 import javono.detector.PathDetector;
 import javono.installer.*;
@@ -15,17 +14,25 @@ import java.nio.file.Paths;
 
 
 public class JavonoBootstrap {
-    public static void runFirstTimeSetupLocal() throws IOException, InterruptedException {
+    public static void setEnvironmentForTheFirstTime() {
         OS currentOS = OS.detect();
         if (!EspIdfInstaller.isIdfInstalled()) {
             JavonoLogger.info("Setting up Environment for Javono...");
             if (currentOS == OS.WINDOWS) {
                 if (!EspIdfInstaller.isInstalledForWindows()) {
-                    EspIdfInstaller.downloadAndInstall();
+                    try {
+                        EspIdfInstaller.downloadAndInstall();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     PythonEnvChecker.warnAndInstallIfMissing();
                     GitInstaller.ensureGitInstalled();
                     JavonoLogger.info("Installing ESP dependencies.");
-                    ESPInstaller.runInstallScript();
+                    try {
+                        ESPInstaller.runInstallScript();
+                    } catch (IOException | InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                     completeInstallationFlag();
                 }
                 if (!EspIdfInstaller.isInstalledForWindows()) {
