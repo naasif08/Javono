@@ -8,7 +8,7 @@ Javono converts a restricted subset of Java into efficient C code suitable for b
 
 ## Features
 
-- Write Java code with `setup()` and `loop()` methods  
+- Write Java code with `setup()` and `loop()` style methods  
 - Support for multiple embedded platforms  
 - Simple and extensible framework  
 - Efficient Java-to-C integration under the hood
