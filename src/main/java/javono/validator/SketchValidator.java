@@ -4,10 +4,10 @@ import com.github.javaparser.*;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import javono.annotations.JavonoCustomMethod;
-import javono.annotations.JavonoLoop;
-import javono.annotations.JavonoSetup;
-import javono.annotations.JavonoSketch;
+import javono.annotations.JavonoEmbeddedUserMethod;
+import javono.annotations.JavonoEmbeddedLoop;
+import javono.annotations.JavonoEmbeddedInit;
+import javono.annotations.JavonoEmbeddedSketch;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -43,14 +43,14 @@ public class SketchValidator {
         Map<String, Set<String>> callGraph = new HashMap<>();
 
         // 1. Build call graph
-        clazz.getMethods().stream().filter(m -> m.isAnnotationPresent(JavonoCustomMethod.class)).forEach(method -> {
+        clazz.getMethods().stream().filter(m -> m.isAnnotationPresent(JavonoEmbeddedUserMethod.class)).forEach(method -> {
             String methodName = method.getNameAsString();
             Set<String> calls = new HashSet<>();
 
             method.findAll(MethodCallExpr.class).forEach(call -> {
                 String calledMethod = call.getNameAsString();
                 // Only track calls to other custom methods
-                clazz.getMethodsByName(calledMethod).stream().filter(m2 -> m2.isAnnotationPresent(JavonoCustomMethod.class)).findAny().ifPresent(matched -> calls.add(calledMethod));
+                clazz.getMethodsByName(calledMethod).stream().filter(m2 -> m2.isAnnotationPresent(JavonoEmbeddedUserMethod.class)).findAny().ifPresent(matched -> calls.add(calledMethod));
             });
 
             callGraph.put(methodName, calls);
@@ -62,7 +62,7 @@ public class SketchValidator {
 
         for (String method : callGraph.keySet()) {
             if (detectCycleDFS(method, callGraph, visited, recursionStack)) {
-                System.err.println("[Javono] Oops! A @JavonoCustomMethod is stuck in a loop — either calling itself or bouncing back and forth with another method.\n" + "[Javono] Recursion (direct or mutual) isn’t supported in Javono.\n" + "[Javono] Keep your methods simple and loop-free, like a true embedded Zen master.");
+                System.err.println("[Javono] Oops! A @JavonoEmbeddedUserMethod is stuck in a loop — either calling itself or bouncing back and forth with another method.\n" + "[Javono] Recursion (direct or mutual) isn’t supported in Javono.\n" + "[Javono] Keep your methods simple and loop-free, like a true embedded Zen master.");
 
                 System.err.println("[Javono] Involved class: " + clazz.getNameAsString() + " (" + file.getFileName() + ")");
                 System.exit(1);
@@ -140,42 +140,42 @@ public class SketchValidator {
                 CompilationUnit cu = result.getResult().get();
 
                 cu.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
-                    if (clazz.isAnnotationPresent(JavonoSketch.class)) {
+                    if (clazz.isAnnotationPresent(JavonoEmbeddedSketch.class)) {
                         sketchFound.set(true);
-                        boolean hasSetup = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoSetup.class));
+                        boolean hasSetup = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoEmbeddedInit.class));
                         if (!hasSetup) {
-                            System.err.println("[Javono] No @JavonoSetup annotation found.");
+                            System.err.println("[Javono] No @JavonoEmbeddedInit annotation found.");
                             System.exit(1);
                         } else {
-                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoSetup.class).forEach(method -> {
-                                boolean isMethodCalledItself = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoSetup.class) && method2.getNameAsString().equals(method));
-                                boolean isLoopCalledFromSetup = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoLoop.class) && method2.getNameAsString().equals(method));
+                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoEmbeddedInit.class).forEach(method -> {
+                                boolean isMethodCalledItself = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoEmbeddedInit.class) && method2.getNameAsString().equals(method));
+                                boolean isLoopCalledFromSetup = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoEmbeddedLoop.class) && method2.getNameAsString().equals(method));
                                 if (isLoopCalledFromSetup) {
-                                    System.err.println("[Javono] \uD83D\uDE05 Nice try! don't call @JavonoLoop from @JavonoSetup — this is for setting up things.\n" + "\n");
+                                    System.err.println("[Javono] \uD83D\uDE05 Nice try! don't call @JavonoEmbeddedLoop from @JavonoEmbeddedInit — this is for setting up things.\n" + "\n");
                                     System.exit(1);
                                 }
                                 if (isMethodCalledItself) {
-                                    System.err.println("[Javono] \uD83D\uDE05 Smart try! You can’t sneak in a call to @JavonoSetup from inside itself or from @JavonoLoop.\n" + "[Javono] Let it do its job in peace — it's called *setup* for a reason!\n");
+                                    System.err.println("[Javono] \uD83D\uDE05 Smart try! You can’t sneak in a call to @JavonoEmbeddedInit from inside itself or from @JavonoEmbeddedLoop.\n" + "[Javono] Let it do its job in peace — it's called *setup* for a reason!\n");
                                     System.exit(1);
                                 }
                             });
                         }
 
 
-                        boolean hasLoop = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoLoop.class));
+                        boolean hasLoop = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoEmbeddedLoop.class));
                         if (!hasLoop) {
-                            System.err.println("[Javono] No @JavonoLoop annotation found.");
+                            System.err.println("[Javono] No @JavonoEmbeddedLoop annotation found.");
                             System.exit(1);
                         } else {
-                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoLoop.class).forEach(method -> {
-                                boolean isMethodCalledItself = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoLoop.class) && method2.getNameAsString().equals(method));
-                                boolean isSetupCalledFromLoop = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoSetup.class) && method2.getNameAsString().equals(method));
+                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoEmbeddedLoop.class).forEach(method -> {
+                                boolean isMethodCalledItself = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoEmbeddedLoop.class) && method2.getNameAsString().equals(method));
+                                boolean isSetupCalledFromLoop = clazz.getMethods().stream().anyMatch(method2 -> method2.isAnnotationPresent(JavonoEmbeddedInit.class) && method2.getNameAsString().equals(method));
                                 if (isSetupCalledFromLoop) {
-                                    System.err.println("[Javono] \uD83D\uDE05 Nice try! @JavonoSetup is for setting the stage — not for looping the show.\n" + "\n");
+                                    System.err.println("[Javono] \uD83D\uDE05 Nice try! @JavonoEmbeddedInit is for setting the stage — not for looping the show.\n" + "\n");
                                     System.exit(1);
                                 }
                                 if (isMethodCalledItself) {
-                                    System.err.println("[Javono] \uD83D\uDE05 Smart try! You can’t sneak in a call to @JavonoLoop from inside itself or from @JavonoSetup.\n" + "[Javono] Let it do its job in peace — it's called *loop* for a reason!\n");
+                                    System.err.println("[Javono] \uD83D\uDE05 Smart try! You can’t sneak in a call to @JavonoEmbeddedLoop from inside itself or from @JavonoEmbeddedInit.\n" + "[Javono] Let it do its job in peace — it's called *loop* for a reason!\n");
                                     System.exit(1);
                                 }
 
@@ -183,13 +183,13 @@ public class SketchValidator {
                             });
                         }
 
-                        boolean hasCustomMethod = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoLoop.class));
+                        boolean hasCustomMethod = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoEmbeddedLoop.class));
 
                         AtomicBoolean isNotAnnotatedCustomMethodFound = new AtomicBoolean(false);
                         AtomicReference<String> customMethodName = new AtomicReference<String>("null");
                         List<String> customMethodNames = new ArrayList<>();
                         clazz.getMethods().forEach(method -> {
-                            if (!method.isAnnotationPresent(JavonoSetup.class) && !method.isAnnotationPresent(JavonoLoop.class) && !method.isAnnotationPresent(JavonoCustomMethod.class)) {
+                            if (!method.isAnnotationPresent(JavonoEmbeddedInit.class) && !method.isAnnotationPresent(JavonoEmbeddedLoop.class) && !method.isAnnotationPresent(JavonoEmbeddedUserMethod.class)) {
                                 isNotAnnotatedCustomMethodFound.set(true);
                                 customMethodName.set(method.getNameAsString());
                                 customMethodNames.add(method.getNameAsString());
@@ -201,24 +201,24 @@ public class SketchValidator {
                             System.err.printf("[Javono] ");
                             customMethodNames.forEach(methodName -> System.err.print(methodName + " "));
                             System.err.println((customMethodNames.size() == 1 ? " method has " : " methods have ") + "not been annotated with any Javono annotation in " + clazz.getNameAsString() + ".java class");
-                            System.err.println("[Javono] Inside @JavonoSketch class every method must be annotated.");
+                            System.err.println("[Javono] Inside @JavonoEmbeddedSketch class every method must be annotated.");
                             System.exit(1);
                         } else {
-                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoCustomMethod.class).forEach(customMethod -> {
-                                boolean isSetupMethodCalledFromCustomMethod = clazz.getMethods().stream().anyMatch(methodDeclaration -> methodDeclaration.isAnnotationPresent(JavonoSetup.class) && methodDeclaration.getNameAsString().equals(customMethod));
+                            getInvokedMethodsInsideAnnotatedMethod(clazz, JavonoEmbeddedUserMethod.class).forEach(customMethod -> {
+                                boolean isSetupMethodCalledFromCustomMethod = clazz.getMethods().stream().anyMatch(methodDeclaration -> methodDeclaration.isAnnotationPresent(JavonoEmbeddedInit.class) && methodDeclaration.getNameAsString().equals(customMethod));
 
-                                boolean isLoopMethodCalledFromCustomMethod = clazz.getMethods().stream().anyMatch(methodDeclaration -> methodDeclaration.isAnnotationPresent(JavonoLoop.class) && methodDeclaration.getNameAsString().equals(customMethod));
+                                boolean isLoopMethodCalledFromCustomMethod = clazz.getMethods().stream().anyMatch(methodDeclaration -> methodDeclaration.isAnnotationPresent(JavonoEmbeddedLoop.class) && methodDeclaration.getNameAsString().equals(customMethod));
 
 
                                 if (isSetupMethodCalledFromCustomMethod) {
-                                    System.err.println("[Javono] Nope! @JavonoSetup can't be summoned like a Pokémon from a @JavonoCustomMethod.");
+                                    System.err.println("[Javono] Nope! @JavonoEmbeddedInit can't be summoned like a Pokémon from a @JavonoEmbeddedUserMethod.");
                                     System.err.println("[Javono] Let the setup method do set up things. You do you.");
 
                                     System.exit(1);
                                 }
 
                                 if (isLoopMethodCalledFromCustomMethod) {
-                                    System.err.println("[Javono] Nope! @JavonoLoop can't be summoned like a Pokémon from a @JavonoCustomMethod.");
+                                    System.err.println("[Javono] Nope! @JavonoEmbeddedLoop can't be summoned like a Pokémon from a @JavonoEmbeddedUserMethod.");
                                     System.err.println("[Javono] Let the loop do the looping. You do you.");
                                     System.exit(1);
                                 }
@@ -227,7 +227,7 @@ public class SketchValidator {
 
                             boolean isConstructorFound = !clazz.getConstructors().isEmpty();
                             if (isConstructorFound) {
-                                System.err.println("[Javono] Sketch class must not declare any constructors. Please remove it and use @JavonoSetup instead.\n");
+                                System.err.println("[Javono] Sketch class must not declare any constructors. Please remove it and use @JavonoEmbeddedInit instead.\n");
                                 System.exit(1);
                             }
 
@@ -236,13 +236,13 @@ public class SketchValidator {
 
 
                             if (isRecursionFoundInsideCustomMethod) {
-                                System.err.println("[Javono] Gentle reminder: A @JavonoCustomMethod seems to be calling itself.\n" + "[Javono] While recursion is clever, Javono encourages a simpler path.\n" + "[Javono] Let’s keep our methods well-behaved and avoid infinite loops!");
+                                System.err.println("[Javono] Gentle reminder: A @JavonoEmbeddedUserMethod seems to be calling itself.\n" + "[Javono] While recursion is clever, Javono encourages a simpler path.\n" + "[Javono] Let’s keep our methods well-behaved and avoid infinite loops!");
                                 System.exit(1);
                             }
                             detectCustomMethodRecursion(clazz, file);
 
                         }
-                        System.out.println("[Javono] @JavonoSketch class found Ok and class name is " + clazz.getName() + ".java");
+                        System.out.println("[Javono] @JavonoEmbeddedSketch class found Ok and class name is " + clazz.getName() + ".java");
                     }
                 });
 

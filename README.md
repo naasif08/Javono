@@ -23,15 +23,15 @@ Javono lets you write embedded programs in simplified Java using two familiar me
 import javono.lib.GPIO;
 import javono.lib.Javono;
 
-@JavonoSketch
+@JavonoEmbeddedSketch
 public class BlinkExample {
 
-    @JavonoSetup
+    @JavonoEmbeddedInit
     public void setup() {
 
     }
 
-    @JavonoLoop
+    @JavonoEmbeddedLoop
     public void loop() {
 
     }

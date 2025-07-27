@@ -6,8 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
-public @interface JavonoSketch {
-}
 
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.METHOD)
+public @interface JavonoEmbeddedLoop {
+}

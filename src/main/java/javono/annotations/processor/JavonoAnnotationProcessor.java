@@ -7,50 +7,49 @@ import javax.lang.model.element.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
-@SupportedAnnotationTypes({"javono.annotations.JavonoSketch", "javono.annotations.JavonoSetup", "javono.annotations.JavonoLoop", "javono.annotations.JavonoCustomMethod"})
+@SupportedAnnotationTypes({"javono.annotations.JavonoEmbeddedSketch", "javono.annotations.JavonoEmbeddedInit", "javono.annotations.JavonoEmbeddedLoop", "javono.annotations.JavonoEmbeddedUserMethod"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class JavonoAnnotationProcessor extends AbstractProcessor {
 
-    // Accumulate all @JavonoSketch annotated classes across rounds
+    // Accumulate all @JavonoEmbeddedSketch annotated classes across rounds
     private final Set<Element> allSketches = new HashSet<>();
 
     private boolean setupFound = false;
     private boolean loopFound = false;
-    private boolean javonoSketchFound = false;
+    private boolean JavonoEmbeddedSketchFound = false;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
             // Final validation after all rounds are done
             if (allSketches.size() != 1) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one class must be annotated with @JavonoSketch, found: " + allSketches.size());
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one class must be annotated with @JavonoEmbeddedSketch, found: " + allSketches.size());
             }
             return false;
         }
 
         // Accumulate sketches found this round
-        Set<? extends Element> sketchesThisRound = roundEnv.getElementsAnnotatedWith(JavonoSketch.class);
+        Set<? extends Element> sketchesThisRound = roundEnv.getElementsAnnotatedWith(JavonoEmbeddedSketch.class);
         allSketches.addAll(sketchesThisRound);
 
         if (allSketches.size() > 1) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] More than one class annotated with @JavonoSketch found.");
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] More than one class annotated with @JavonoEmbeddedSketch found.");
             // We continue processing to show more errors, but this is a fatal situation
         }
 
         if (allSketches.size() == 1) {
-            setJavonoSketchFound(true);
+            setJavonoEmbeddedSketchFound(true);
             Element sketchClass = allSketches.iterator().next();
             if (!sketchClass.getModifiers().contains(Modifier.PUBLIC)) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoSketch class must be public.");
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoEmbeddedSketch class must be public.");
             }
             if (sketchClass.getModifiers().contains(Modifier.ABSTRACT)) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoSketch class must not be abstract.");
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoEmbeddedSketch class must not be abstract.");
             }
 
             if (sketchClass instanceof TypeElement) {
@@ -61,64 +60,64 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
                 // Check for extends (other than Object)
                 String superClassName = typeElement.getSuperclass().toString();
                 if (!superClassName.equals("java.lang.Object")) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Classes annotated with @JavonoSketch cannot extend other classes. Please keep it standalone.", sketchClass);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Classes annotated with @JavonoEmbeddedSketch cannot extend other classes. Please keep it standalone.", sketchClass);
                 }
 
                 // Check for implements
                 if (!typeElement.getInterfaces().isEmpty()) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Classes annotated with @JavonoSketch cannot implement interfaces. Keep it simple and pure!", sketchClass);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Classes annotated with @JavonoEmbeddedSketch cannot implement interfaces. Keep it simple and pure!", sketchClass);
                 }
             }
 
 
-            // Validate @JavonoSetup methods
-            Set<? extends Element> setupMethods = roundEnv.getElementsAnnotatedWith(JavonoSetup.class);
+            // Validate @JavonoEmbeddedInit methods
+            Set<? extends Element> setupMethods = roundEnv.getElementsAnnotatedWith(JavonoEmbeddedInit.class);
             if (setupMethods.size() != 1) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one method must be annotated with @JavonoSetup, found: " + setupMethods.size());
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one method must be annotated with @JavonoEmbeddedInit, found: " + setupMethods.size());
             }
             for (Element setup : setupMethods) {
-                validateMethodInSketchClass(setup, sketchClass, "@JavonoSetup");
-                validateVoidMethod(setup, "@JavonoSetup");
+                validateMethodInSketchClass(setup, sketchClass, "@JavonoEmbeddedInit");
+                validateVoidMethod(setup, "@JavonoEmbeddedInit");
                 setSetupFound(true);
             }
 
-            // Validate @JavonoLoop methods
-            Set<? extends Element> loopMethods = roundEnv.getElementsAnnotatedWith(JavonoLoop.class);
+            // Validate @JavonoEmbeddedLoop methods
+            Set<? extends Element> loopMethods = roundEnv.getElementsAnnotatedWith(JavonoEmbeddedLoop.class);
             if (loopMethods.size() != 1) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one method must be annotated with @JavonoLoop, found: " + loopMethods.size());
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one method must be annotated with @JavonoEmbeddedLoop, found: " + loopMethods.size());
             }
             for (Element loop : loopMethods) {
-                validateMethodInSketchClass(loop, sketchClass, "@JavonoLoop");
-                validateVoidMethod(loop, "@JavonoLoop");
+                validateMethodInSketchClass(loop, sketchClass, "@JavonoEmbeddedLoop");
+                validateVoidMethod(loop, "@JavonoEmbeddedLoop");
                 setLoopFound(true);
             }
 
-            // Validate @JavonoCustomMethod methods are inside sketch class
-            Set<? extends Element> customMethods = roundEnv.getElementsAnnotatedWith(JavonoCustomMethod.class);
+            // Validate @JavonoEmbeddedUserMethod methods are inside sketch class
+            Set<? extends Element> customMethods = roundEnv.getElementsAnnotatedWith(JavonoEmbeddedUserMethod.class);
             for (Element custom : customMethods) {
                 if (!custom.getEnclosingElement().equals(sketchClass)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoCustomMethod methods must be inside the @JavonoSketch class", custom);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoEmbeddedUserMethod methods must be inside the @JavonoEmbeddedSketch class", custom);
                 }
             }
 
             for (Element custom : customMethods) {
                 if (!custom.getEnclosingElement().equals(sketchClass)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoCustomMethod methods must be inside the @JavonoSketch class", custom);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoEmbeddedUserMethod methods must be inside the @JavonoEmbeddedSketch class", custom);
                 }
 
                 // Check that the method is private
                 Set<Modifier> modifiers = custom.getModifiers();
                 if (!modifiers.contains(Modifier.PRIVATE)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoCustomMethod methods must be private", custom);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoEmbeddedUserMethod methods must be private", custom);
                 }
 
                 // Check that the method is NOT static
                 if (modifiers.contains(Modifier.STATIC)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoCustomMethod methods must NOT be static", custom);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @JavonoEmbeddedUserMethod methods must NOT be static", custom);
                 }
             }
 
-            for (Element element : roundEnv.getElementsAnnotatedWith(JavonoSketch.class)) {
+            for (Element element : roundEnv.getElementsAnnotatedWith(JavonoEmbeddedSketch.class)) {
                 if (element.getKind() == ElementKind.CLASS) {
                     TypeElement sketchClazz = (TypeElement) element;
                     validateFields(sketchClazz);
@@ -144,7 +143,7 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
 
     private void validateMethodInSketchClass(Element method, Element sketchClass, String annotationName) {
         if (!method.getEnclosingElement().equals(sketchClass)) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] " + annotationName + " method must be inside the @JavonoSketch class", method);
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] " + annotationName + " method must be inside the @JavonoEmbeddedSketch class", method);
         }
         if (method.getKind() != ElementKind.METHOD) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] " + annotationName + " can only be applied to methods", method);
@@ -185,10 +184,10 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
 
         for (Element element : enclosedElements) {
             if (element.getKind() == ElementKind.METHOD) {
-                boolean isAnnotated = element.getAnnotation(JavonoLoop.class) != null || element.getAnnotation(JavonoSetup.class) != null || element.getAnnotation(JavonoCustomMethod.class) != null;
+                boolean isAnnotated = element.getAnnotation(JavonoEmbeddedLoop.class) != null || element.getAnnotation(JavonoEmbeddedInit.class) != null || element.getAnnotation(JavonoEmbeddedUserMethod.class) != null;
 
                 if (!isAnnotated) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Every method inside a @JavonoSketch class must be annotated with @JavonoLoop, @JavonoSetup, or @JavonoCustomMethod.", element);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Every method inside a @JavonoEmbeddedSketch class must be annotated with @JavonoEmbeddedLoop, @JavonoEmbeddedInit, or @JavonoEmbeddedUserMethod.", element);
                 }
             }
         }
@@ -299,11 +298,11 @@ public class JavonoAnnotationProcessor extends AbstractProcessor {
         this.setupFound = setupFound;
     }
 
-    public boolean isJavonoSketchFound() {
-        return javonoSketchFound;
+    public boolean isJavonoEmbeddedSketchFound() {
+        return JavonoEmbeddedSketchFound;
     }
 
-    public void setJavonoSketchFound(boolean javonoSketchFound) {
-        this.javonoSketchFound = javonoSketchFound;
+    public void setJavonoEmbeddedSketchFound(boolean JavonoEmbeddedSketchFound) {
+        this.JavonoEmbeddedSketchFound = JavonoEmbeddedSketchFound;
     }
 }

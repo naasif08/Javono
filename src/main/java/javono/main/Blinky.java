@@ -1,11 +1,15 @@
 package javono.main;
 
 import javono.annotations.*;
-import javono.annotations.JavonoLoop;
+import javono.annotations.JavonoEmbeddedLoop;
+import javono.builder.JavonoBuilder;
+import javono.builder.impl.RemoteBuilder;
 import javono.lib.GPIO;
 
+import java.lang.annotation.Annotation;
 
-@JavonoSketch
+
+@JavonoEmbeddedSketch
 public class Blinky {
 
     private int number = 10;
@@ -15,24 +19,25 @@ public class Blinky {
     private String string;
     private GPIO gpio;
 
-    @JavonoSetup
+    @JavonoEmbeddedInit
     private void setUp() {
     }
 
 
-    @JavonoLoop
+    @JavonoEmbeddedLoop
     private void loop() {
-
     }
 
-    @JavonoCustomMethod
+    @JavonoEmbeddedUserMethod
     private GPIO myCustomMethod2() {
+
         return new GPIO();
     }
 
 
-    @JavonoCustomMethod
+    @JavonoEmbeddedUserMethod
     private int myCustomMethod() {
         return 0;
     }
+
 }
