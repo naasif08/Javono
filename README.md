@@ -27,12 +27,12 @@ import javono.lib.Javono;
 public class BlinkExample {
 
     @JavonoEmbeddedInit
-    public void setup() {
+    public void embeddedInit() {
 
     }
 
     @JavonoEmbeddedLoop
-    public void loop() {
+    public void embeddedLoop() {
 
     }
 }
