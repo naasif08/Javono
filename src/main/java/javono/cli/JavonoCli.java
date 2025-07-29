@@ -2,7 +2,7 @@ package javono.cli;
 
 import javono.bootstrap.JavonoBootstrap;
 import javono.builder.JavonoBuilder;
-import javono.builder.impl.LocalBuilder;
+import javono.builder.impl.JavonoLocalBuilder;
 import javono.builder.impl.RemoteBuilder;
 
 
@@ -24,7 +24,7 @@ public class JavonoCli {
             }
         }
 
-        JavonoBuilder builder = useRemote ? new RemoteBuilder() : new LocalBuilder();
+        JavonoBuilder builder = useRemote ? new RemoteBuilder() : new JavonoLocalBuilder();
 
         switch (command) {
             case "init":

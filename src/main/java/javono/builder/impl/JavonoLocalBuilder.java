@@ -11,7 +11,7 @@ import javono.validator.SketchValidator;
 import java.io.File;
 import java.io.IOException;
 
-public class LocalBuilder implements JavonoBuilder {
+public class JavonoLocalBuilder implements JavonoBuilder {
 
     private File projectDir;
 
