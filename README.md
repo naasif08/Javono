@@ -40,7 +40,7 @@ public class BlinkExample {
 ```java
 import javono.builder.impl.JavonoLocalBuilder;
 
-public class JavonoMain {
+public class Main {
 
     public static void main(String arg[]) {
     
