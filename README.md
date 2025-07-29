@@ -38,9 +38,6 @@ public class BlinkExample {
 ```
 
 ```java
-package example.main;
-
-
 import javono.builder.impl.LocalBuilder;
 
 public class JavonoMain {
@@ -49,7 +46,6 @@ public class JavonoMain {
         new LocalBuilder()
                 .build()
                 .flash();
-
     }
 }
 ```
