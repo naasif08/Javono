@@ -40,7 +40,9 @@ public class BlinkExample {
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License.  
+See [LICENSE](LICENSE) for full license details.  
+See the [NOTICE](NOTICE) file for attribution and licensing guidelines.
 
 ---
 
