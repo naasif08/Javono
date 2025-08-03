@@ -14,7 +14,7 @@ import java.util.HashSet;
 
 @SupportedAnnotationTypes({"javono.annotations.JavonoEmbeddedSketch", "javono.annotations.JavonoEmbeddedInit", "javono.annotations.JavonoEmbeddedLoop", "javono.annotations.JavonoEmbeddedUserMethod"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
-public class JavonoAnnotationProcessor extends AbstractProcessor {
+public class AnnotationProcessor extends AbstractProcessor {
 
     // Accumulate all @JavonoEmbeddedSketch annotated classes across rounds
     private final Set<Element> allSketches = new HashSet<>();
