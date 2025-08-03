@@ -4,7 +4,7 @@ package javono.bootstrap;
 import javono.detector.OS;
 import javono.detector.PathDetector;
 import javono.installer.*;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 import javono.utils.PythonEnvChecker;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class JavonoBootstrap {
     public static void setEnvironmentForTheFirstTime() {
         OS currentOS = OS.detect();
         if (!EspIdfInstaller.isIdfInstalled()) {
-            JavonoLogger.info("Setting up Environment for Javono...");
+            Logger.info("Setting up Environment for Javono...");
             if (currentOS == OS.WINDOWS) {
                 if (!EspIdfInstaller.isInstalledForWindows()) {
                     try {
@@ -27,7 +27,7 @@ public class JavonoBootstrap {
                     }
                     PythonEnvChecker.warnAndInstallIfMissing();
                     GitInstaller.ensureGitInstalled();
-                    JavonoLogger.info("Installing ESP dependencies.");
+                    Logger.info("Installing ESP dependencies.");
                     try {
                         ESPInstaller.runInstallScript();
                     } catch (IOException | InterruptedException e) {
@@ -38,7 +38,7 @@ public class JavonoBootstrap {
                 if (!EspIdfInstaller.isInstalledForWindows()) {
                     throw new RuntimeException("ESP-IDF installation failed or incomplete.");
                 } else {
-                    JavonoLogger.success("Esp IDF already installed.");
+                    Logger.success("Esp IDF already installed.");
                 }
 
             } else if (currentOS == OS.LINUX) {
@@ -51,7 +51,7 @@ public class JavonoBootstrap {
                 if (!EspIdfInstaller.isInstalledForLinux()) {
                     throw new RuntimeException("ESP-IDF installation failed or incomplete.");
                 } else {
-                    JavonoLogger.success("Esp IDF already installed.");
+                    Logger.success("Esp IDF already installed.");
                 }
 
             } else if (currentOS == OS.MACOS) {
@@ -63,15 +63,15 @@ public class JavonoBootstrap {
                 if (!EspIdfInstaller.isInstalledForMac()) {
                     throw new RuntimeException("ESP-IDF installation failed or incomplete.");
                 } else {
-                    JavonoLogger.success("Esp IDF already installed.");
+                    Logger.success("Esp IDF already installed.");
                 }
             } else {
                 throw new UnsupportedOperationException("Unsupported OS: " + currentOS);
             }
         } else {
-            JavonoLogger.success("Already Javono Environment installed...");
+            Logger.success("Already Javono Environment installed...");
         }
-        JavonoLogger.success("All Dependencies are installed successfully!");
+        Logger.success("All Dependencies are installed successfully!");
         CH340Installer.installDriver();
         PathDetector.printDetectedPaths();
     }
@@ -80,9 +80,9 @@ public class JavonoBootstrap {
         Path flagFile = Paths.get(EspIdfInstaller.getJavonoFolder().toString(), "installcomplete.txt");
         try {
             Files.writeString(flagFile, "Installation completed successfully.\n");
-            JavonoLogger.info("Created installcomplete.txt at: " + flagFile);
+            Logger.info("Created installcomplete.txt at: " + flagFile);
         } catch (IOException e) {
-            JavonoLogger.error("Failed to create installcomplete.txt: " + e.getMessage());
+            Logger.error("Failed to create installcomplete.txt: " + e.getMessage());
         }
     }
 

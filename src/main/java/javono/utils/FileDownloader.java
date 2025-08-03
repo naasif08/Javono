@@ -1,6 +1,6 @@
 package javono.utils;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -27,10 +27,10 @@ public class FileDownloader {
 
             // ✅ Already downloaded
             if (existingSize == expectedTotal) {
-                JavonoLogger.success("File already downloaded (" + (existingSize / (1024 * 1024)) + " MB). Finalizing...");
+                Logger.success("File already downloaded (" + (existingSize / (1024 * 1024)) + " MB). Finalizing...");
                 if (finalFile.exists()) finalFile.delete();
                 if (tempFile.renameTo(finalFile)) {
-                    JavonoLogger.success("Download complete.");
+                    Logger.success("Download complete.");
                 } else {
                     throw new IOException("Failed to rename .part file.");
                 }
@@ -41,7 +41,7 @@ public class FileDownloader {
                 HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
                 if (existingSize > 0) {
                     connection.setRequestProperty("Range", "bytes=" + existingSize + "-");
-                    JavonoLogger.info("Resuming download from: " + (existingSize / (1024 * 1024)) + " MB");
+                    Logger.info("Resuming download from: " + (existingSize / (1024 * 1024)) + " MB");
                 }
 
                 connection.connect();
@@ -79,7 +79,7 @@ public class FileDownloader {
                 if (tempFile.length() == expectedTotal) {
                     if (finalFile.exists()) finalFile.delete();
                     if (tempFile.renameTo(finalFile)) {
-                        JavonoLogger.success("Download completed successfully.");
+                        Logger.success("Download completed successfully.");
                     } else {
                         throw new IOException("Failed to rename temp file.");
                     }
@@ -91,10 +91,10 @@ public class FileDownloader {
                 retryCount++;
 
                 if (tempFile.exists() && tempFile.length() == expectedTotal) {
-                    JavonoLogger.success("File is already fully downloaded. Finalizing...");
+                    Logger.success("File is already fully downloaded. Finalizing...");
                     if (finalFile.exists()) finalFile.delete();
                     if (tempFile.renameTo(finalFile)) {
-                        JavonoLogger.success("Renamed successfully.");
+                        Logger.success("Renamed successfully.");
                         return;
                     }
                 }
@@ -103,9 +103,9 @@ public class FileDownloader {
                     throw new IOException("Maximum retries reached.");
                 }
 
-                JavonoLogger.warn("Network error or disconnected. Waiting to retry in 5 seconds...");
+                Logger.warn("Network error or disconnected. Waiting to retry in 5 seconds...");
                 Thread.sleep(5000);
-                JavonoLogger.info("Retrying download from: " + (tempFile.length() / (1024 * 1024)) + " MB");
+                Logger.info("Retrying download from: " + (tempFile.length() / (1024 * 1024)) + " MB");
             }
         }
     }
@@ -116,12 +116,12 @@ public class FileDownloader {
         conn.connect();
         long size = conn.getContentLengthLong();
         conn.disconnect();
-        JavonoLogger.info("Expected total size: " + (size / (1024 * 1024)) + " MB");
+        Logger.info("Expected total size: " + (size / (1024 * 1024)) + " MB");
         return size;
     }
 
     private static void log(String msg) {
-        if (debug) JavonoLogger.info(msg);
+        if (debug) Logger.info(msg);
     }
 
     public static void downloadFile(String urlString, Path destination) throws IOException {
@@ -141,9 +141,9 @@ public class FileDownloader {
 
         long expectedSize = connection.getContentLengthLong();
         if (expectedSize <= 0) {
-            JavonoLogger.warn("Warning: Unable to determine expected file size.");
+            Logger.warn("Warning: Unable to determine expected file size.");
         } else {
-            JavonoLogger.info("Expected file size: " + (expectedSize / (1024 * 1024)) + " MB");
+            Logger.info("Expected file size: " + (expectedSize / (1024 * 1024)) + " MB");
         }
         connection.disconnect();
 
@@ -157,7 +157,7 @@ public class FileDownloader {
             long totalRead = 0;
             long lastPrintTime = System.currentTimeMillis();
 
-            JavonoLogger.info("⬇️ Downloading: " + urlString);
+            Logger.info("⬇️ Downloading: " + urlString);
 
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
@@ -183,9 +183,9 @@ public class FileDownloader {
         // Rename temp file to final destination
         Files.move(tempFile, destination, StandardCopyOption.REPLACE_EXISTING);
         if (expectedSize > 0) {
-            JavonoLogger.info("\r" + buildProgressBar(100) + " 100%\n");
+            Logger.info("\r" + buildProgressBar(100) + " 100%\n");
         }
-        JavonoLogger.success("Download complete: " + destination);
+        Logger.success("Download complete: " + destination);
     }
 
     private static String buildProgressBar(int percent) {

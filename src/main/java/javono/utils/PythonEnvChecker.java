@@ -1,7 +1,7 @@
 package javono.utils;
 
 import javono.installer.PythonInstaller;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -68,9 +68,9 @@ public class PythonEnvChecker {
 
     public static void warnAndInstallIfMissing() {
         if (!isPythonCommandAvailable()) {
-            JavonoLogger.info("❌ Python3 is not installed.");
+            Logger.info("❌ Python3 is not installed.");
             try {
-                JavonoLogger.info("Installing Python");
+                Logger.info("Installing Python");
                 PythonInstaller.ensureMinicondaInstalled();
                 return;
             } catch (IOException | InterruptedException e) {

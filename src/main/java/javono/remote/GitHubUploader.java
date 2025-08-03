@@ -1,6 +1,6 @@
 package javono.remote;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -22,7 +22,7 @@ public class GitHubUploader {
         // Step 1: Create a temporary directory to clone into
         Path tempDir = Files.createTempDirectory("Javono-github-upload-");
         String tempPath = tempDir.toAbsolutePath().toString();
-        JavonoLogger.info("📂 Cloning repo to temp: " + tempPath);
+        Logger.info("📂 Cloning repo to temp: " + tempPath);
 
         // Step 2: Clone the repo using token auth
         String authUrl = repoUrl.replace("https://", "https://" + accessToken + "@");
@@ -52,7 +52,7 @@ public class GitHubUploader {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                JavonoLogger.info("  » " + line);
+                Logger.info("  » " + line);
             }
         }
 

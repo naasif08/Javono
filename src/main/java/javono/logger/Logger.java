@@ -1,5 +1,5 @@
 package javono.logger;
-public class JavonoLogger {
+public class Logger {
     private static final String PREFIX = "[Javono] ";
 
     public static void info(String message) {

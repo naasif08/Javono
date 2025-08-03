@@ -1,6 +1,6 @@
 package javono.utils;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,12 +56,12 @@ public class TerminalLauncher {
 
         new ProcessBuilder("bash", "-c", terminalCommand).start();
 
-        JavonoLogger.info("⏳ Waiting for terminal task to complete...");
+        Logger.info("⏳ Waiting for terminal task to complete...");
         while (!doneFlag.exists()) {
             Thread.sleep(1000);
         }
 
         doneFlag.delete();
-        JavonoLogger.info("Terminal task completed.");
+        Logger.info("Terminal task completed.");
     }
 }

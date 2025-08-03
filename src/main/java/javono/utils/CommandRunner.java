@@ -1,6 +1,6 @@
 package javono.utils;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,7 +14,7 @@ public class CommandRunner {
 
 
     public static int runCommand(String... commandParts) throws IOException, InterruptedException {
-        JavonoLogger.info("Running: " + String.join(" ", commandParts));
+        Logger.info("Running: " + String.join(" ", commandParts));
         ProcessBuilder pb = new ProcessBuilder(commandParts);
         pb.inheritIO(); // optional: prints output directly
         Process process = pb.start();
@@ -38,7 +38,7 @@ public class CommandRunner {
                 new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                JavonoLogger.info("[CMD] " + line);
+                Logger.info("[CMD] " + line);
             }
         }
 
@@ -84,7 +84,7 @@ public class CommandRunner {
      * Logs and runs a command, mainly for debug.
      */
     public static int runVerbose(String[] command) throws IOException {
-        JavonoLogger.info("[Running] " + Arrays.toString(command));
+        Logger.info("[Running] " + Arrays.toString(command));
         return runBlocking(command);
     }
 }

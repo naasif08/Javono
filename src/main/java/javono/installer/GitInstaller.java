@@ -2,7 +2,7 @@ package javono.installer;
 
 import javono.detector.OS;
 import javono.detector.PathDetector;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 import javono.utils.TerminalLauncher;
 import javono.utils.FileDownloader;
 
@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.*;
 import java.util.Locale;
-import java.util.Objects;
 
 public class GitInstaller {
 
@@ -26,25 +25,25 @@ public class GitInstaller {
         }
 
         if (isGitOnPath()) {
-            JavonoLogger.success("System Git found on PATH.");
+            Logger.success("System Git found on PATH.");
             return;
         }
 
         OS os = OS.detect();
-        JavonoLogger.warn("Git not found in system PATH.");
+        Logger.warn("Git not found in system PATH.");
 
         try {
             switch (os) {
                 case WINDOWS -> {
-                    JavonoLogger.info("Installing Portable Git for Windows...");
+                    Logger.info("Installing Portable Git for Windows...");
                     installPortableGitWindows();
                 }
                 case LINUX -> {
-                    JavonoLogger.info("Please install Git using your package manager.");
+                    Logger.info("Please install Git using your package manager.");
                     TerminalLauncher.openSudoCommandInTerminal("sudo apt-get update && sudo apt-get install -y git");
                 }
                 case MACOS -> {
-                    JavonoLogger.info("Please install Git using Homebrew.");
+                    Logger.info("Please install Git using Homebrew.");
                     TerminalLauncher.openSudoCommandInTerminal("brew install git");
                 }
                 default -> throw new UnsupportedOperationException("Unsupported OS: " + os + ". Please install Git manually.");
@@ -58,7 +57,7 @@ public class GitInstaller {
             throw new RuntimeException("Git installation failed or was not detected after installation attempt.");
         }
 
-        JavonoLogger.success("Git installation verified.");
+        Logger.success("Git installation verified.");
     }
 
     private static boolean isGitOnPath() {
@@ -74,7 +73,7 @@ public class GitInstaller {
                 process.waitFor();
             }
         } catch (Exception e) {
-            JavonoLogger.warn("Exception checking git presence: " + e.getMessage());
+            Logger.warn("Exception checking git presence: " + e.getMessage());
             return false;
         }
     }
@@ -84,26 +83,26 @@ public class GitInstaller {
         Path downloadFile = espIdfPath.resolve(getDownloadFilename());
 
         if (Files.exists(gitExePath)) {
-            JavonoLogger.success("Portable Git already installed at: " + gitExePath);
+            Logger.success("Portable Git already installed at: " + gitExePath);
             return;
         }
 
         if (Files.exists(downloadFile)) {
-            JavonoLogger.warn("Previous archive found. Deleting...");
+            Logger.warn("Previous archive found. Deleting...");
             Files.delete(downloadFile);
         }
 
         String downloadUrl = getDownloadUrl();
-        JavonoLogger.info("Downloading Portable Git from: " + downloadUrl);
+        Logger.info("Downloading Portable Git from: " + downloadUrl);
         FileDownloader.downloadWithResume(downloadUrl, downloadFile);
 
         Path oldGitFolder = espIdfPath.resolve("cmd");
         if (Files.exists(oldGitFolder)) {
-            JavonoLogger.info("Cleaning old Git folder: " + oldGitFolder);
+            Logger.info("Cleaning old Git folder: " + oldGitFolder);
             deleteRecursively(oldGitFolder);
         }
 
-        JavonoLogger.info("Extracting Portable Git archive...");
+        Logger.info("Extracting Portable Git archive...");
         extract7zExe(downloadFile, espIdfPath);
 
         Files.deleteIfExists(downloadFile);
@@ -112,7 +111,7 @@ public class GitInstaller {
             throw new RuntimeException("Portable Git extraction failed, git.exe not found at expected location.");
         }
 
-        JavonoLogger.success("Portable Git installed at: " + gitExePath);
+        Logger.success("Portable Git installed at: " + gitExePath);
     }
 
     private static Path getEspIdfPath() {

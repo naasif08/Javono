@@ -1,6 +1,6 @@
 package javono.remote;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,12 +38,12 @@ public class GitHubWorkflowRunner {
     public Path waitForFirmwareArtifact(Path firmwareDir) throws IOException, InterruptedException {
         final int MAX_ATTEMPTS = 20;
         final int POLL_INTERVAL_MS = 10_000; // 10 seconds
-        JavonoLogger.info("Waiting for GitHub Actions to publish firmware artifact...");
+        Logger.info("Waiting for GitHub Actions to publish firmware artifact...");
 
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 Path binFile = downloadFirmwareBin(firmwareDir);
-                JavonoLogger.info("✅ Firmware artifact is ready!");
+                Logger.info("✅ Firmware artifact is ready!");
                 return binFile;
             } catch (FileNotFoundException e) {
                 System.out.printf("【Javono】Attempt %d/%d: Not ready yet, retrying in %d sec...\n",
@@ -59,12 +59,12 @@ public class GitHubWorkflowRunner {
     public void uploadProjectToRepo(Path projectDir) throws IOException {
         // Optional: Zip the project and push via Git CLI
         // Currently placeholder — you can implement `git push` if the repo is already cloned
-        JavonoLogger.info("🚀 [TODO] Push project to GitHub: " + repoUrl);
+        Logger.info("🚀 [TODO] Push project to GitHub: " + repoUrl);
     }
 
     public void triggerBuild() {
         // Assuming a GitHub Actions workflow is already set to trigger on `push`
-        JavonoLogger.info("🔁 Waiting for GitHub Actions to finish build...");
+        Logger.info("🔁 Waiting for GitHub Actions to finish build...");
     }
 
     public Path downloadFirmwareBin(Path outputDir) throws IOException {
@@ -126,7 +126,7 @@ public class GitHubWorkflowRunner {
     private int extractLatestArtifactId(InputStream jsonStream) throws IOException {
         // You can use Gson or Jackson for real JSON parsing.
         // Here’s just a placeholder:
-        JavonoLogger.info("📝 [TODO] Parse artifact JSON response...");
+        Logger.info("📝 [TODO] Parse artifact JSON response...");
         return 123456; // Replace with real artifact ID
     }
 

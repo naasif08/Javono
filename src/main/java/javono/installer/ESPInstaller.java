@@ -2,7 +2,7 @@ package javono.installer;
 
 import javono.detector.OS;
 import javono.detector.ToolPaths;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,7 +55,7 @@ public class ESPInstaller {
             throw new IOException("Install script not found: " + scriptPath);
         }
 
-        JavonoLogger.info("Running ESP-IDF install script: " + scriptPath);
+        Logger.info("Running ESP-IDF install script: " + scriptPath);
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(ESP_IDF_PATH.toFile());
@@ -96,11 +96,11 @@ public class ESPInstaller {
 
         int exitCode = pb.start().waitFor();
         if (exitCode != 0) {
-            JavonoLogger.error("Install script exited with code " + exitCode);
+            Logger.error("Install script exited with code " + exitCode);
             throw new RuntimeException("ESP-IDF installation failed or incomplete.");
         }
 
-        JavonoLogger.success("ESP-IDF install script completed successfully.");
+        Logger.success("ESP-IDF install script completed successfully.");
     }
 
     private static String detectOS() {

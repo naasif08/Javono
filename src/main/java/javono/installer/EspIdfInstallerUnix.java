@@ -1,6 +1,6 @@
 package javono.installer;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,11 +40,11 @@ public class EspIdfInstallerUnix {
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                JavonoLogger.error("Install script exited with code " + exitCode);
+                Logger.error("Install script exited with code " + exitCode);
                 throw new RuntimeException("ESP-IDF installation failed or incomplete.");
             }
         } catch (IOException | InterruptedException e) {
-            JavonoLogger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
+            Logger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
         }
     }
 
@@ -87,9 +87,9 @@ public class EspIdfInstallerUnix {
             builder.inheritIO();
             Process process = builder.start();
             int exitCode = process.waitFor();
-            JavonoLogger.info("ESP-IDF installation terminal closed with exit code " + exitCode);
+            Logger.info("ESP-IDF installation terminal closed with exit code " + exitCode);
         } catch (IOException | InterruptedException e) {
-            JavonoLogger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
+            Logger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
         }
     }
 }

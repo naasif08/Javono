@@ -5,14 +5,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
-import javono.detector.PathDetector;
-import javono.logger.JavonoLogger;
-import javono.utils.CommandRunner;
+import javono.logger.Logger;
 
 public class CmakeInstaller {
 
     public static void installCmakeIfMissing(String espIdfPath) {
-        JavonoLogger.info("Installing CMake using idf_tools.py...");
+        Logger.info("Installing CMake using idf_tools.py...");
 
         File idfToolsPy = new File(espIdfPath, "tools/idf_tools.py");
         if (!idfToolsPy.exists()) {
@@ -36,7 +34,7 @@ public class CmakeInstaller {
                 throw new RuntimeException("❌ Failed to install CMake with idf_tools.py");
             }
 
-            JavonoLogger.success("CMake installed with project-local IDF_TOOLS_PATH");
+            Logger.success("CMake installed with project-local IDF_TOOLS_PATH");
             findCmake(espIdfPath);
 
         } catch (IOException | InterruptedException e) {
@@ -54,7 +52,7 @@ public class CmakeInstaller {
 
         if (versionDir.isPresent()) {
             File cmakeBin = new File(versionDir.get(), "bin/cmake");
-            JavonoLogger.success("Found CMake binary at: " + cmakeBin.getAbsolutePath());
+            Logger.success("Found CMake binary at: " + cmakeBin.getAbsolutePath());
         } else {
             throw new RuntimeException("❌ No valid CMake version directory with binary found inside: " + cmakeBase.getAbsolutePath());
         }

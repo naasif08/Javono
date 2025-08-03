@@ -3,7 +3,7 @@ package javono.builder.impl;
 import javono.detector.ToolPaths;
 import javono.builder.JavonoBuilder;
 import javono.detector.PathDetector;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 import javono.probuilder.ProjectCreator;
 import javono.probuilder.BatchBuilder;
 import javono.remote.GitHubArtifactDownloader;
@@ -57,7 +57,7 @@ public class RemoteBuilder implements JavonoBuilder {
             Path firmwareDir = ToolPaths.getDotJavonoDir().toPath().resolve("firmware");
             Files.createDirectories(firmwareDir);
 
-            JavonoLogger.info("🚀 Uploading project to GitHub...");
+            Logger.info("🚀 Uploading project to GitHub...");
 
             // 1. Push projectDir to a temp branch
             GitHubUploader uploader = new GitHubUploader(githubRepoUrl, githubAccessToken);
@@ -71,7 +71,7 @@ public class RemoteBuilder implements JavonoBuilder {
             Path outputFile = firmwareDir.resolve("firmware.bin");
             GitHubArtifactDownloader.downloadArtifact(artifactUrl, outputFile, githubAccessToken);
 
-            JavonoLogger.success("Firmware downloaded to: " + outputFile.toAbsolutePath());
+            Logger.success("Firmware downloaded to: " + outputFile.toAbsolutePath());
 
         } catch (Exception e) {
             throw new RuntimeException("❌ Remote flashing failed.", e);

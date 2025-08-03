@@ -1,7 +1,7 @@
 package javono.detector;
 
 import com.fazecast.jSerialComm.SerialPort;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,8 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 
 public class PathDetector {
@@ -178,24 +176,24 @@ public class PathDetector {
     }
 
     public static void printDetectedPaths() {
-        JavonoLogger.info("----- Javono Detection Report -----");
-        JavonoLogger.info("IDF Path → " + detectIdfPath());
-        JavonoLogger.info("idf.py Path → " + detectIdfPyPath());
-        JavonoLogger.info("Python Path → " + detectPythonPath());
-        JavonoLogger.info("Python Executable → " + detectPythonExecutable());
-        JavonoLogger.info("Toolchain Bin → " + detectToolchainBin());
-        JavonoLogger.info("Ccache Bin → " + detectCcacheBin());
-        JavonoLogger.info("Git Path → " + findEspressifGitPath());
-        JavonoLogger.info("CMake Path → " + detectCmakePath());
-        JavonoLogger.info("Ninja Path → " + detectNinjaPath());
-        JavonoLogger.info("Xtensa GDB → " + detectXtensaGdbPath());
-        JavonoLogger.info("Xtensa Toolchain Path → " + detectXtensaToolchainPath());
-        JavonoLogger.info("DFU Util Bin → " + detectDfuUtilBin());
-        JavonoLogger.info("OpenOCD Bin → " + detectOpenOcdBin());
-        JavonoLogger.info("OpenOCD Scripts → " + detectOpenOcdScriptsPath());
-        JavonoLogger.info("Constraint File → " + getConstraintFilePath());
-        JavonoLogger.info("ESP32 Serial Port → " + detectEsp32Port());
-        JavonoLogger.info("---------------Ends---------------");
+        Logger.info("----- Javono Detection Report -----");
+        Logger.info("IDF Path → " + detectIdfPath());
+        Logger.info("idf.py Path → " + detectIdfPyPath());
+        Logger.info("Python Path → " + detectPythonPath());
+        Logger.info("Python Executable → " + detectPythonExecutable());
+        Logger.info("Toolchain Bin → " + detectToolchainBin());
+        Logger.info("Ccache Bin → " + detectCcacheBin());
+        Logger.info("Git Path → " + findEspressifGitPath());
+        Logger.info("CMake Path → " + detectCmakePath());
+        Logger.info("Ninja Path → " + detectNinjaPath());
+        Logger.info("Xtensa GDB → " + detectXtensaGdbPath());
+        Logger.info("Xtensa Toolchain Path → " + detectXtensaToolchainPath());
+        Logger.info("DFU Util Bin → " + detectDfuUtilBin());
+        Logger.info("OpenOCD Bin → " + detectOpenOcdBin());
+        Logger.info("OpenOCD Scripts → " + detectOpenOcdScriptsPath());
+        Logger.info("Constraint File → " + getConstraintFilePath());
+        Logger.info("ESP32 Serial Port → " + detectEsp32Port());
+        Logger.info("---------------Ends---------------");
     }
 
     private static boolean isWindows() {

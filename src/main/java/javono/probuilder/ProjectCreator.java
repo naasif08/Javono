@@ -2,7 +2,7 @@ package javono.probuilder;
 
 import javono.detector.OS;
 import javono.detector.ToolPaths;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class ProjectCreator {
         ProjectCreator.PROJECT_DIR = projectDir.getAbsolutePath();
         Path mainDir = projectDir.toPath().resolve("main");
         Files.createDirectories(mainDir);
-        JavonoLogger.info("Created project directory: " + projectDir.getAbsolutePath());
+        Logger.info("Created project directory: " + projectDir.getAbsolutePath());
         if (OS.detect().isWindows()) {
             writeFiles();
         } else {
@@ -44,7 +44,7 @@ public class ProjectCreator {
         writeTextFile(PROJECT_DIR + "\\main\\Javono_serial.c", serialSourceFile());
         writeTextFile(PROJECT_DIR + "\\main\\main.c", mainCContent());
 
-        JavonoLogger.info("Created all project files.");
+        Logger.info("Created all project files.");
     }
 
     private static void writeFilesLinux() throws IOException {
@@ -63,12 +63,12 @@ public class ProjectCreator {
         writeTextFile(PROJECT_DIR + "//main//Javono_serial.c", serialSourceFile());
         writeTextFile(PROJECT_DIR + "//main//main.c", mainCContent());
 
-        JavonoLogger.info("Created all project files.");
+        Logger.info("Created all project files.");
     }
 
     private static void writeTextFile(String path, String content) throws IOException {
         Files.write(Paths.get(path), content.getBytes());
-        JavonoLogger.success("Created: " + path);
+        Logger.success("Created: " + path);
     }
 
     private static String cmakeListsTxtContent() {

@@ -1,6 +1,6 @@
 package javono.flasher;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.*;
 import java.util.Locale;
@@ -21,7 +21,7 @@ public class Esp32Flasher {
         if (exitCode != 0) {
             throw new RuntimeException("Flashing failed with exit code: " + exitCode);
         } else {
-            JavonoLogger.success("Flashing finished successfully.");
+            Logger.success("Flashing finished successfully.");
         }
     }
 

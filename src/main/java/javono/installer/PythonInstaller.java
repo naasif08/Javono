@@ -1,6 +1,6 @@
 package javono.installer;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 import javono.utils.FileDownloader;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class PythonInstaller {
     public static void ensureMinicondaInstalled() throws IOException, InterruptedException {
         Path pythonExe = getPythonExecutable();
         if (Files.exists(pythonExe)) {
-            JavonoLogger.info("Miniconda Python already installed at: " + pythonExe);
+            Logger.info("Miniconda Python already installed at: " + pythonExe);
             return;
         }
 
@@ -42,7 +42,7 @@ public class PythonInstaller {
         String filename = url.substring(url.lastIndexOf("/") + 1);
         Path installerPath = Paths.get(System.getProperty("java.io.tmpdir")).resolve(filename);
 
-        JavonoLogger.info("Downloading Miniconda from: " + url);
+        Logger.info("Downloading Miniconda from: " + url);
         FileDownloader.downloadWithResume(url, installerPath);
 
         if ("windows".equals(os)) {
@@ -52,7 +52,7 @@ public class PythonInstaller {
         }
 
         Files.deleteIfExists(installerPath);
-        JavonoLogger.success("Miniconda installed successfully at: " + pythonExe);
+        Logger.success("Miniconda installed successfully at: " + pythonExe);
     }
 
     private static void runWindowsInstaller(Path installerPath) throws IOException, InterruptedException {
@@ -65,7 +65,7 @@ public class PythonInstaller {
                 "/D=" + INSTALL_DIR.toString().replace("/", "\\") // Windows needs backslashes
         );
 
-        JavonoLogger.info("Running Windows Miniconda installer: " + String.join(" ", command));
+        Logger.info("Running Windows Miniconda installer: " + String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
@@ -81,11 +81,11 @@ public class PythonInstaller {
         int checkExit = checkProcess.waitFor();
 
         if (checkExit == 0) {
-            JavonoLogger.info("python3-venv is already available.");
+            Logger.info("python3-venv is already available.");
             return;
         }
 
-        JavonoLogger.info("python3-venv not found. Attempting to install...");
+        Logger.info("python3-venv not found. Attempting to install...");
 
         // Try installing via apt
         ProcessBuilder install = new ProcessBuilder("sudo", "apt-get", "update");
@@ -100,7 +100,7 @@ public class PythonInstaller {
             throw new IOException("Failed to install python3-venv via apt-get.");
         }
 
-        JavonoLogger.success("python3-venv installed successfully.");
+        Logger.success("python3-venv installed successfully.");
     }
 
 
@@ -114,7 +114,7 @@ public class PythonInstaller {
                 "-p", INSTALL_DIR.toString()
         );
 
-        JavonoLogger.info("Running Unix Miniconda installer: " + String.join(" ", command));
+        Logger.info("Running Unix Miniconda installer: " + String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();

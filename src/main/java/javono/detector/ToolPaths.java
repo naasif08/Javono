@@ -1,6 +1,6 @@
 package javono.detector;
 
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -122,9 +122,9 @@ public final class ToolPaths {
 
         try {
             Files.writeString(propPath, template);
-            JavonoLogger.success("Created .Javono/javono.properties template.");
+            Logger.success("Created .Javono/javono.properties template.");
         } catch (IOException e) {
-            JavonoLogger.error("Failed to create javono.properties: " + e.getMessage());
+            Logger.error("Failed to create javono.properties: " + e.getMessage());
         }
     }
 
@@ -135,7 +135,7 @@ public final class ToolPaths {
         try (InputStream in = Files.newInputStream(propPath)) {
             Properties props = new Properties();
             props.load(in);
-            JavonoLogger.info("Loaded manual overrides from javono.properties");
+            Logger.info("Loaded manual overrides from javono.properties");
 
             idfPath = resolve(props, "javono.idfPath", idfPath);
             pythonPath = resolve(props, "javono.pythonPath", pythonPath);

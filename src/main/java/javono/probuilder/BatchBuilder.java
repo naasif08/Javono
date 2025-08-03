@@ -1,7 +1,7 @@
 package javono.probuilder;
 
 import javono.detector.ToolPaths;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -89,7 +89,7 @@ public class BatchBuilder {
             writer.write(batchContent);
         }
 
-        JavonoLogger.success("Batch file written to: " + batchFile.getAbsolutePath());
+        Logger.success("Batch file written to: " + batchFile.getAbsolutePath());
 
     }
 
@@ -142,7 +142,7 @@ public class BatchBuilder {
 
         bashFile.setExecutable(true); // Make script executable
 
-        JavonoLogger.success("Bash script written to: " + bashFile.getAbsolutePath());
+        Logger.success("Bash script written to: " + bashFile.getAbsolutePath());
     }
 
 

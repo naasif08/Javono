@@ -1,7 +1,7 @@
 package javono.installer;
 
 import javono.detector.OS;
-import javono.logger.JavonoLogger;
+import javono.logger.Logger;
 import javono.utils.FileDownloader;
 import javono.utils.ZipExtractor;
 
@@ -40,14 +40,14 @@ public class EspIdfInstaller {
         Path targetDir = zipPath.getParent();
 
         try {
-            JavonoLogger.info("Downloading ESP-IDF...");
+            Logger.info("Downloading ESP-IDF...");
             FileDownloader.downloadWithResume(url, zipPath);
 
-            JavonoLogger.info("Extracting...");
+            Logger.info("Extracting...");
             ZipExtractor.extract(zipPath, targetDir); // extract into /Javono/
 
             Files.delete(zipPath); // optional cleanup
-            JavonoLogger.success("Extracted at: " + targetDir);
+            Logger.success("Extracted at: " + targetDir);
         } catch (IOException e) {
             throw new RuntimeException("❌ Installation failed: " + e.getMessage());
         } catch (InterruptedException e) {
@@ -57,7 +57,7 @@ public class EspIdfInstaller {
         try {
             Files.writeString(flagFile, "Extraction completed successfully.\n");
         } catch (IOException e) {
-            JavonoLogger.error("Failed to create complete.txt: " + e.getMessage());
+            Logger.error("Failed to create complete.txt: " + e.getMessage());
         }
     }
 
@@ -86,7 +86,7 @@ public class EspIdfInstaller {
         } else if (os.contains("mac")) {
             return isInstalledForMac();
         } else {
-            JavonoLogger.error("Unsupported OS for ESP-IDF install check.");
+            Logger.error("Unsupported OS for ESP-IDF install check.");
             return false;
         }
     }
