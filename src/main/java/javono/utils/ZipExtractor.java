@@ -11,7 +11,7 @@ import java.util.zip.ZipInputStream;
 /**
  * Utility to extract ZIP archives to a target directory.
  */
-public class ZipExtractor {
+class ZipExtractor {
 
     /**
      * Extracts a ZIP archive to the given output directory.
@@ -20,9 +20,8 @@ public class ZipExtractor {
      * @param outputFolder path where contents will be extracted
      * @throws IOException if extraction fails
      */
-    public static void extract(Path zipFilePath, Path outputFolder) throws IOException {
-        try (InputStream fis = Files.newInputStream(zipFilePath);
-             ZipInputStream zis = new ZipInputStream(fis)) {
+    void extract(Path zipFilePath, Path outputFolder) throws IOException {
+        try (InputStream fis = Files.newInputStream(zipFilePath); ZipInputStream zis = new ZipInputStream(fis)) {
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {

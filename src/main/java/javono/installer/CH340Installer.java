@@ -1,23 +1,24 @@
 package javono.installer;
 
 import javono.detector.OS;
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.Locale;
 
-public class CH340Installer {
+class CH340Installer {
 
-    public static void installDriver() {
+    public void installDriver() {
         if (isDriverInstalled()) {
-            Logger.success("CH340 driver is already installed.");
+            LoggerFacade.getInstance().success("CH340 driver is already installed.");
             return;
         }
 
         OS os = OS.detect();
 
-        Logger.info("CH340 driver not found. Installing now on " + os + "...");
+        LoggerFacade.getInstance().info("CH340 driver not found. Installing now on " + os + "...");
 
         switch (os) {
             case WINDOWS:
@@ -30,7 +31,7 @@ public class CH340Installer {
                 installLinux();
                 break;
             default:
-                Logger.error("Unsupported OS: " + os);
+                LoggerFacade.getInstance().error("Unsupported OS: " + os);
         }
     }
 
@@ -57,7 +58,7 @@ public class CH340Installer {
                 }
             }
         } catch (IOException e) {
-            Logger.error("⚠️ Unable to check driver on Windows: " + e.getMessage());
+            LoggerFacade.getInstance().error("⚠️ Unable to check driver on Windows: " + e.getMessage());
         }
         return false;
     }
@@ -75,7 +76,7 @@ public class CH340Installer {
                 }
             }
         } catch (IOException e) {
-            Logger.error("⚠️ Unable to check kext on macOS: " + e.getMessage());
+            LoggerFacade.getInstance().error("⚠️ Unable to check kext on macOS: " + e.getMessage());
         }
         return false;
     }
@@ -92,7 +93,7 @@ public class CH340Installer {
                 }
             }
         } catch (IOException e) {
-            Logger.error("⚠️ Unable to check kernel module on Linux: " + e.getMessage());
+            LoggerFacade.getInstance().error("⚠️ Unable to check kernel module on Linux: " + e.getMessage());
         }
         return false;
     }
@@ -100,21 +101,21 @@ public class CH340Installer {
     private static void installWindows() {
         try (InputStream in = CH340Installer.class.getResourceAsStream("/drivers/windows/CH341SER.EXE")) {
             if (in == null) {
-                Logger.error("CH341SER.EXE not found in JAR.");
+                LoggerFacade.getInstance().error("CH341SER.EXE not found in JAR.");
                 return;
             }
             File tempExe = File.createTempFile("ch340-installer", ".exe");
             Files.copy(in, tempExe.toPath(), StandardCopyOption.REPLACE_EXISTING);
             tempExe.setExecutable(true);
 
-            Logger.info("Extracted to: " + tempExe.getAbsolutePath());
+            LoggerFacade.getInstance().info("Extracted to: " + tempExe.getAbsolutePath());
 
             // Launch installer (normal)
             Runtime.getRuntime().exec(new String[]{"cmd", "/c", tempExe.getAbsolutePath()});
-            Logger.info("CH340 installer launched on Windows.");
+            LoggerFacade.getInstance().info("CH340 installer launched on Windows.");
 
         } catch (IOException e) {
-            Logger.error("Windows install failed: " + e.getMessage());
+            LoggerFacade.getInstance().error("Windows install failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -122,37 +123,37 @@ public class CH340Installer {
     private static void installMac() {
         try (InputStream in = CH340Installer.class.getResourceAsStream("/drivers/macos/CH34x_Install.pkg")) {
             if (in == null) {
-                Logger.error("CH34x_Install.pkg not found in JAR.");
+                LoggerFacade.getInstance().error("CH34x_Install.pkg not found in JAR.");
                 return;
             }
             File tempPkg = File.createTempFile("ch340-mac", ".pkg");
             Files.copy(in, tempPkg.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-            Logger.info("Extracted to: " + tempPkg.getAbsolutePath());
+            LoggerFacade.getInstance().info("Extracted to: " + tempPkg.getAbsolutePath());
 
             // Open installer
             Runtime.getRuntime().exec(new String[]{"open", tempPkg.getAbsolutePath()});
-            Logger.success("CH340 installer launched on macOS.");
+            LoggerFacade.getInstance().success("CH340 installer launched on macOS.");
 
         } catch (IOException e) {
-            Logger.error("macOS install failed: " + e.getMessage());
+            LoggerFacade.getInstance().error("macOS install failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     private static void installLinux() {
-        Logger.info("On Linux, CH340 drivers are usually built-in.");
-        Logger.info("See drivers/ch340/linux/README.txt for manual setup if needed.");
+        LoggerFacade.getInstance().info("On Linux, CH340 drivers are usually built-in.");
+        LoggerFacade.getInstance().info("See drivers/ch340/linux/README.txt for manual setup if needed.");
 
         // Optionally extract README.txt to current dir for user convenience
         try (InputStream in = CH340Installer.class.getResourceAsStream("/drivers/linux/README.txt")) {
             if (in != null) {
                 File doc = new File("CH340-Linux-README.txt");
                 Files.copy(in, doc.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                Logger.info("Linux guide extracted to: " + doc.getAbsolutePath());
+                LoggerFacade.getInstance().info("Linux guide extracted to: " + doc.getAbsolutePath());
             }
         } catch (IOException e) {
-            Logger.error("Failed to extract Linux README: " + e.getMessage());
+            LoggerFacade.getInstance().error("Failed to extract Linux README: " + e.getMessage());
         }
     }
 }

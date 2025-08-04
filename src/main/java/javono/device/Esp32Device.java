@@ -10,7 +10,7 @@ import java.util.Optional;
  * Represents a Javono-managed ESP32 device.
  * Handles connection (serial/OTA), firmware updates, and command sending.
  */
-public class Esp32Device {
+class Esp32Device {
 
     private final DeviceInfo deviceInfo;
 

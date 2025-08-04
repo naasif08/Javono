@@ -1,12 +1,10 @@
 package javono.builder.impl;
 
 import javono.builder.JavonoBuilder;
-import javono.detector.PathDetector;
-import javono.detector.ToolPaths;
-import javono.flasher.Esp32Flasher;
-import javono.probuilder.BatchBuilder;
-import javono.probuilder.ProjectCreator;
-import javono.validator.SketchValidator;
+import javono.detector.DetectorFacade;
+import javono.flasher.FlasherFacade;
+import javono.probuilder.ProjectBuilderFacade;
+import javono.validator.ValidatorFacade;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,19 +16,19 @@ public class JavonoLocalBuilder implements JavonoBuilder {
     @Override
     public JavonoBuilder build() {
 
-        SketchValidator.getInstance().validateProject();
+        ValidatorFacade.getInstance().validateProject();
 
-        if (!ToolPaths.isInitialized()) {
-            ToolPaths.init();
+        if (!DetectorFacade.getInstance().isToolPathsInitialized()) {
+            DetectorFacade.getInstance().initializeToolPaths();
         }
         try {
-            this.projectDir = ProjectCreator.createProject();
+            this.projectDir = ProjectBuilderFacade.getInstance().createProject();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        BatchBuilder batchBuilder = new BatchBuilder();
+
         try {
-            batchBuilder.writeBuildScripts(this.projectDir, PathDetector.detectEsp32Port());
+            ProjectBuilderFacade.getInstance().writeBuildScripts(this.projectDir, DetectorFacade.getInstance().detectEsp32Port());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -39,9 +37,8 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder flash() {
-        Esp32Flasher esp32Flasher = new Esp32Flasher();
         try {
-            esp32Flasher.flashProject(projectDir);
+            FlasherFacade.getInstance().flashProject(projectDir);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }

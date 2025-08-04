@@ -1,6 +1,7 @@
 package javono.remote;
 
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class GitHubWorkflowRunner {
+class GitHubWorkflowRunner {
 
     private final String repoUrl;
     private final String accessToken;
@@ -30,20 +31,21 @@ public class GitHubWorkflowRunner {
 
     /**
      * Waits and downloads the latest firmware artifact (`firmware.bin`) from the GitHub Actions workflow.
+     *
      * @param firmwareDir Where to store the firmware.bin file (e.g., .Javono/firmware)
      * @return Path to the downloaded firmware.bin
-     * @throws IOException if network or download fails
+     * @throws IOException          if network or download fails
      * @throws InterruptedException if polling is interrupted
      */
     public Path waitForFirmwareArtifact(Path firmwareDir) throws IOException, InterruptedException {
         final int MAX_ATTEMPTS = 20;
         final int POLL_INTERVAL_MS = 10_000; // 10 seconds
-        Logger.info("Waiting for GitHub Actions to publish firmware artifact...");
+        LoggerFacade.getInstance().info("Waiting for GitHub Actions to publish firmware artifact...");
 
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 Path binFile = downloadFirmwareBin(firmwareDir);
-                Logger.info("✅ Firmware artifact is ready!");
+                LoggerFacade.getInstance().info("✅ Firmware artifact is ready!");
                 return binFile;
             } catch (FileNotFoundException e) {
                 System.out.printf("【Javono】Attempt %d/%d: Not ready yet, retrying in %d sec...\n",
@@ -59,12 +61,12 @@ public class GitHubWorkflowRunner {
     public void uploadProjectToRepo(Path projectDir) throws IOException {
         // Optional: Zip the project and push via Git CLI
         // Currently placeholder — you can implement `git push` if the repo is already cloned
-        Logger.info("🚀 [TODO] Push project to GitHub: " + repoUrl);
+        LoggerFacade.getInstance().info("🚀 [TODO] Push project to GitHub: " + repoUrl);
     }
 
     public void triggerBuild() {
         // Assuming a GitHub Actions workflow is already set to trigger on `push`
-        Logger.info("🔁 Waiting for GitHub Actions to finish build...");
+        LoggerFacade.getInstance().info("🔁 Waiting for GitHub Actions to finish build...");
     }
 
     public Path downloadFirmwareBin(Path outputDir) throws IOException {
@@ -126,7 +128,7 @@ public class GitHubWorkflowRunner {
     private int extractLatestArtifactId(InputStream jsonStream) throws IOException {
         // You can use Gson or Jackson for real JSON parsing.
         // Here’s just a placeholder:
-        Logger.info("📝 [TODO] Parse artifact JSON response...");
+        LoggerFacade.getInstance().info("📝 [TODO] Parse artifact JSON response...");
         return 123456; // Replace with real artifact ID
     }
 

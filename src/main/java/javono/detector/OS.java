@@ -1,10 +1,7 @@
 package javono.detector;
 
 public enum OS {
-    WINDOWS,
-    LINUX,
-    MACOS,
-    UNKNOWN;
+    WINDOWS, LINUX, MACOS, UNKNOWN;
 
     public static OS detect() {
         String osName = System.getProperty("os.name").toLowerCase();
@@ -17,6 +14,14 @@ public enum OS {
     // ✅ Add this method here:
     public boolean isWindows() {
         return this == WINDOWS;
+    }
+
+    public boolean isLinux() {
+        return this == LINUX;
+    }
+
+    public boolean isMac() {
+        return this == MACOS;
     }
 
     public boolean isUnixLike() {

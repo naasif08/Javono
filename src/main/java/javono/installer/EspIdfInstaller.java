@@ -1,9 +1,9 @@
 package javono.installer;
 
 import javono.detector.OS;
-import javono.logger.Logger;
-import javono.utils.FileDownloader;
-import javono.utils.ZipExtractor;
+
+import javono.logger.LoggerFacade;
+import javono.utils.UtilsFacade;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,11 +11,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static javono.detector.PathDetector.VERSION;
+import static javono.detector.DetectorFacade.VERSION;
 
-public class EspIdfInstaller {
+class EspIdfInstaller {
 
-    public static boolean isIdfInstalled() {
+    public boolean isIdfInstalled() {
         OS os = OS.detect();
         if (os == OS.WINDOWS) {
             return isInstalledForWindows();
@@ -28,7 +28,7 @@ public class EspIdfInstaller {
     }
 
 
-    public static void downloadAndInstall() throws IOException {
+    public void downloadAndInstall() throws IOException {
         String url = "https://dl.espressif.com/github_assets/espressif/esp-idf/releases/download/" + VERSION + "/esp-idf-" + VERSION + ".zip";
         Path zipPath = getJavonoFolder().resolve("esp-idf.zip");
         Path completeFlag = Path.of(getJavonoFolder().toString() + "//esp-idf-" + VERSION).resolve("complete.txt");
@@ -40,28 +40,28 @@ public class EspIdfInstaller {
         Path targetDir = zipPath.getParent();
 
         try {
-            Logger.info("Downloading ESP-IDF...");
-            FileDownloader.downloadWithResume(url, zipPath);
+            LoggerFacade.getInstance().info("Downloading ESP-IDF...");
+            UtilsFacade.getInstance().downloadWithResume(url, zipPath);
 
-            Logger.info("Extracting...");
-            ZipExtractor.extract(zipPath, targetDir); // extract into /Javono/
+            LoggerFacade.getInstance().info("Extracting...");
+            UtilsFacade.getInstance().extractZip(zipPath, targetDir);
 
             Files.delete(zipPath); // optional cleanup
-            Logger.success("Extracted at: " + targetDir);
+            LoggerFacade.getInstance().success("Extracted at: " + targetDir);
         } catch (IOException e) {
             throw new RuntimeException("❌ Installation failed: " + e.getMessage());
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        Path flagFile = Paths.get(EspIdfInstaller.getJavonoFolder().toString(), "esp-idf-" + VERSION, "complete.txt");
+        Path flagFile = Paths.get(getJavonoFolder().toString(), "esp-idf-" + VERSION, "complete.txt");
         try {
             Files.writeString(flagFile, "Extraction completed successfully.\n");
         } catch (IOException e) {
-            Logger.error("Failed to create complete.txt: " + e.getMessage());
+            LoggerFacade.getInstance().error("Failed to create complete.txt: " + e.getMessage());
         }
     }
 
-    public static Path getJavonoFolder() {
+    public Path getJavonoFolder() {
         OS os = getOSType();
         return switch (os) {
             case WINDOWS -> Paths.get("C:", "Javono");
@@ -78,7 +78,7 @@ public class EspIdfInstaller {
         return OS.UNKNOWN;
     }
 
-    public static boolean isInstalledForUnix() {
+    public boolean isInstalledForUnix() {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("nux")) {
@@ -86,26 +86,26 @@ public class EspIdfInstaller {
         } else if (os.contains("mac")) {
             return isInstalledForMac();
         } else {
-            Logger.error("Unsupported OS for ESP-IDF install check.");
+            LoggerFacade.getInstance().error("Unsupported OS for ESP-IDF install check.");
             return false;
         }
     }
 
-    public static boolean isInstalledForWindows() {
+    public boolean isInstalledForWindows() {
         String path = Paths.get("C:", "Javono").toString();
         File javonoFolder = new File(path);
         File installFile = new File(path + "/installcomplete.txt");
         return javonoFolder.exists() && installFile.exists() && installFile.canRead();
     }
 
-    public static boolean isInstalledForLinux() {
+    public boolean isInstalledForLinux() {
         String path = System.getProperty("user.home") + "/Javono";
         File javonoFolder = new File(path);
         File installFile = new File(path + "/installcomplete.txt");
         return javonoFolder.exists() && installFile.exists() && installFile.canRead();
     }
 
-    public static boolean isInstalledForMac() {
+    public boolean isInstalledForMac() {
         // Assuming default install path for macOS
         String path = System.getProperty("user.home") + "/Javono";
         File javonoFolder = new File(path);
@@ -114,7 +114,7 @@ public class EspIdfInstaller {
     }
 
     // Optionally verify by actually running idf.py --version
-    public static boolean verifyByCommand() {
+    public boolean verifyByCommand() {
         try {
             Process process = new ProcessBuilder("idf.py", "--version").redirectErrorStream(true).start();
             int exitCode = process.waitFor();

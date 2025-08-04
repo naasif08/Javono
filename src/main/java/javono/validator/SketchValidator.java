@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SketchValidator {
+class SketchValidator {
 
     private static final SketchValidator INSTANCE = new SketchValidator();
     private final Path userProjectSrcDir = detectUniversalJavaSourceDir();

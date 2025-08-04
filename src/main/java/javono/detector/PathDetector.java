@@ -1,7 +1,8 @@
 package javono.detector;
 
 import com.fazecast.jSerialComm.SerialPort;
-import javono.logger.Logger;
+import javono.logger.LoggerFacade;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -11,13 +12,13 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 
-public class PathDetector {
+class PathDetector {
 
-    private static final Path IDF_ROOT = getDefaultIdfPath();
-    public static final String VERSION = "v5.4.2";
-    private static final String CONSTRAINT = "v5.4";
+    private final Path IDF_ROOT = getDefaultIdfPath();
+    public final String VERSION = "v5.4.2";
+    private final String CONSTRAINT = "v5.4";
 
-    private static Path getDefaultIdfPath() {
+    private Path getDefaultIdfPath() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             return Paths.get("C:", "Javono", "esp-idf-" + VERSION);
@@ -26,7 +27,7 @@ public class PathDetector {
         }
     }
 
-    private static Path getDefaultPath() {
+    private Path getDefaultPath() {
         if (OS.detect().isWindows()) {
             return Paths.get("C:", "Javono", "esp-idf-" + VERSION);
         } else {
@@ -34,11 +35,11 @@ public class PathDetector {
         }
     }
 
-    public static String detectIdfPath() {
+    public String detectIdfPath() {
         return Files.exists(IDF_ROOT) ? IDF_ROOT.toString() : null;
     }
 
-    public static String detectTool(String executableName) {
+    public String detectTool(String executableName) {
         File toolPath;
         if (OS.detect().isWindows()) {
             toolPath = searchFileRecursively(IDF_ROOT.toFile(), executableName);
@@ -51,7 +52,7 @@ public class PathDetector {
         return (toolPath != null) ? toolPath.getParent() : null;
     }
 
-    public static String detectPythonPath() {
+    public String detectPythonPath() {
         if (OS.detect().isWindows()) {
             return detectTool("python.exe");
         } else {
@@ -64,7 +65,7 @@ public class PathDetector {
 
     }
 
-    public static String detectPythonExecutable() {
+    public String detectPythonExecutable() {
         File file;
         if (OS.detect().isWindows()) {
             file = searchFileRecursively(IDF_ROOT.toFile(), "python.exe");
@@ -78,19 +79,19 @@ public class PathDetector {
         }
     }
 
-    public static String detectToolchainBin() {
+    public String detectToolchainBin() {
         return detectTool(isWindows() ? "xtensa-esp-elf-gcc.exe" : "xtensa-esp-elf-gcc");
     }
 
-    public static String detectCcacheBin() {
+    public String detectCcacheBin() {
         return detectTool(isWindows() ? "ccache.exe" : "ccache");
     }
 
-    public static String findEspressifGitPath() {
-        return GitPathFinder.findGitPath(Path.of(Objects.requireNonNull(detectIdfPath())));
+    public String findEspressifGitPath() {
+        return DetectorFacade.getInstance().findGitPath(Path.of(Objects.requireNonNull(detectIdfPath())));
     }
 
-    public static String detectCmakePath() {
+    public String detectCmakePath() {
         if (OS.detect().isWindows()) {
             return detectTool("cmake.exe");
         } else {
@@ -102,7 +103,7 @@ public class PathDetector {
         }
     }
 
-    public static String detectNinjaPath() {
+    public String detectNinjaPath() {
         if (OS.detect().isWindows()) {
             return detectTool("ninja.exe");
         } else {
@@ -114,33 +115,33 @@ public class PathDetector {
         }
     }
 
-    public static String detectIdfPyPath() {
+    public String detectIdfPyPath() {
         File idfPy = new File(IDF_ROOT.toFile(), "tools/idf.py");
         return idfPy.exists() ? idfPy.getParent() : null;
     }
 
-    public static String detectXtensaGdbPath() {
+    public String detectXtensaGdbPath() {
         return detectTool(isWindows() ? "xtensa-esp32-elf-gdb.exe" : "xtensa-esp32-elf-gdb");
     }
 
-    public static String detectXtensaToolchainPath() {
+    public String detectXtensaToolchainPath() {
         return detectTool(isWindows() ? "xtensa-esp-elf-gcc.exe" : "xtensa-esp-elf-gcc");
     }
 
-    public static String detectDfuUtilBin() {
+    public String detectDfuUtilBin() {
         return detectTool(isWindows() ? "dfu-util.exe" : "dfu-util");
     }
 
-    public static String detectOpenOcdBin() {
+    public String detectOpenOcdBin() {
         return detectTool(isWindows() ? "openocd.exe" : "openocd");
     }
 
-    public static String detectOpenOcdScriptsPath() {
+    public String detectOpenOcdScriptsPath() {
         File file = searchFileRecursively(IDF_ROOT.toFile(), "memory.tcl");
         return (file != null) ? file.getParent() : null;
     }
 
-    public static String detectEspClangPath() {
+    public String detectEspClangPath() {
         return detectTool(isWindows() ? "clang.exe" : "clang");
     }
 
@@ -159,7 +160,7 @@ public class PathDetector {
         return null;
     }
 
-    private static String getSystemPath(String name) throws IOException, InterruptedException {
+    private String getSystemPath(String name) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("which", name);
         Process process = pb.start();
 
@@ -170,37 +171,37 @@ public class PathDetector {
         }
     }
 
-    public static String getConstraintFilePath() {
+    public String getConstraintFilePath() {
         String FILE_NAME = "espidf.constraints." + CONSTRAINT + ".txt";
         return detectTool(FILE_NAME);
     }
 
-    public static void printDetectedPaths() {
-        Logger.info("----- Javono Detection Report -----");
-        Logger.info("IDF Path → " + detectIdfPath());
-        Logger.info("idf.py Path → " + detectIdfPyPath());
-        Logger.info("Python Path → " + detectPythonPath());
-        Logger.info("Python Executable → " + detectPythonExecutable());
-        Logger.info("Toolchain Bin → " + detectToolchainBin());
-        Logger.info("Ccache Bin → " + detectCcacheBin());
-        Logger.info("Git Path → " + findEspressifGitPath());
-        Logger.info("CMake Path → " + detectCmakePath());
-        Logger.info("Ninja Path → " + detectNinjaPath());
-        Logger.info("Xtensa GDB → " + detectXtensaGdbPath());
-        Logger.info("Xtensa Toolchain Path → " + detectXtensaToolchainPath());
-        Logger.info("DFU Util Bin → " + detectDfuUtilBin());
-        Logger.info("OpenOCD Bin → " + detectOpenOcdBin());
-        Logger.info("OpenOCD Scripts → " + detectOpenOcdScriptsPath());
-        Logger.info("Constraint File → " + getConstraintFilePath());
-        Logger.info("ESP32 Serial Port → " + detectEsp32Port());
-        Logger.info("---------------Ends---------------");
+    public void printDetectedPaths() {
+        LoggerFacade.getInstance().info("----- Javono Detection Report -----");
+        LoggerFacade.getInstance().info("IDF Path → " + detectIdfPath());
+        LoggerFacade.getInstance().info("idf.py Path → " + detectIdfPyPath());
+        LoggerFacade.getInstance().info("Python Path → " + detectPythonPath());
+        LoggerFacade.getInstance().info("Python Executable → " + detectPythonExecutable());
+        LoggerFacade.getInstance().info("Toolchain Bin → " + detectToolchainBin());
+        LoggerFacade.getInstance().info("Ccache Bin → " + detectCcacheBin());
+        LoggerFacade.getInstance().info("Git Path → " + findEspressifGitPath());
+        LoggerFacade.getInstance().info("CMake Path → " + detectCmakePath());
+        LoggerFacade.getInstance().info("Ninja Path → " + detectNinjaPath());
+        LoggerFacade.getInstance().info("Xtensa GDB → " + detectXtensaGdbPath());
+        LoggerFacade.getInstance().info("Xtensa Toolchain Path → " + detectXtensaToolchainPath());
+        LoggerFacade.getInstance().info("DFU Util Bin → " + detectDfuUtilBin());
+        LoggerFacade.getInstance().info("OpenOCD Bin → " + detectOpenOcdBin());
+        LoggerFacade.getInstance().info("OpenOCD Scripts → " + detectOpenOcdScriptsPath());
+        LoggerFacade.getInstance().info("Constraint File → " + getConstraintFilePath());
+        LoggerFacade.getInstance().info("ESP32 Serial Port → " + detectEsp32Port());
+        LoggerFacade.getInstance().info("---------------Ends---------------");
     }
 
-    private static boolean isWindows() {
+    private boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("win");
     }
 
-    private static File searchFileRecursively(File dir, String targetFileName) {
+    private File searchFileRecursively(File dir, String targetFileName) {
         if (dir == null || !dir.exists()) return null;
         File[] files = dir.listFiles();
         if (files == null) return null;

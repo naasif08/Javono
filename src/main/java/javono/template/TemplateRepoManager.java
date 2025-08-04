@@ -1,7 +1,7 @@
 package javono.template;
 
-import javono.utils.CommandRunner;
-import javono.utils.FileUtils;
+
+import javono.utils.UtilsFacade;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,15 +35,15 @@ public class TemplateRepoManager {
         Files.createDirectories(cloneTarget.getParent());
 
         String authUrl = insertToken(repoUrl, accessToken);
-        String[] command = { "git", "clone", "--depth", "1", authUrl, cloneTarget.toString() };
+        String[] command = {"git", "clone", "--depth", "1", authUrl, cloneTarget.toString()};
 
-        int exit = CommandRunner.runBlocking(command);
+        int exit = UtilsFacade.getInstance().runBlocking(command);
         if (exit != 0) {
             throw new IOException("Failed to clone template repository (exit code " + exit + ")");
         }
 
         // Remove .git to make it a clean project copy
-        FileUtils.deleteDirectory(cloneTarget.resolve(".git"));
+        UtilsFacade.getInstance().deleteDirectory(cloneTarget.resolve(".git"));
     }
 
     /**
@@ -57,9 +57,7 @@ public class TemplateRepoManager {
             throw new IOException("Cannot update — not a Git repo: " + cloneTarget);
         }
 
-        int exit = CommandRunner.runBlocking(new String[] {
-                "git", "-C", cloneTarget.toString(), "pull"
-        });
+        int exit = UtilsFacade.getInstance().runBlocking(new String[]{"git", "-C", cloneTarget.toString(), "pull"});
 
         if (exit != 0) {
             throw new IOException("Failed to update template repository (exit code " + exit + ")");

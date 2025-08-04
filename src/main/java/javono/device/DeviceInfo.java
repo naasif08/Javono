@@ -3,7 +3,7 @@ package javono.device;
 /**
  * Represents the basic information of a connected Javono ESP32 device.
  */
-public class DeviceInfo {
+class DeviceInfo {
 
     private final String deviceId;        // Unique device identifier (e.g., UUID or serial number)
     private final String model;           // Device model name or type

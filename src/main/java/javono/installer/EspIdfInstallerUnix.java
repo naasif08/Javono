@@ -1,15 +1,16 @@
 package javono.installer;
 
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.IOException;
 import java.util.List;
 
-import static javono.detector.PathDetector.VERSION;
+import static javono.detector.DetectorFacade.VERSION;
 
-public class EspIdfInstallerUnix {
+class EspIdfInstallerUnix {
 
-    public static void installForLinux() {
+    public void installForLinux() {
         String espDir = "$HOME/Javono"; // or use absolute path if preferred
         String fullCommand = String.join(" && ", List.of(
                 "sudo apt update",
@@ -40,15 +41,15 @@ public class EspIdfInstallerUnix {
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                Logger.error("Install script exited with code " + exitCode);
+                LoggerFacade.getInstance().error("Install script exited with code " + exitCode);
                 throw new RuntimeException("ESP-IDF installation failed or incomplete.");
             }
         } catch (IOException | InterruptedException e) {
-            Logger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
+            LoggerFacade.getInstance().error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
         }
     }
 
-    public static void installForMacOS() {
+    public void installForMacOS() {
         String espDir = System.getProperty("user.home") + "/Javono";
 
         // Compose the full shell script to run inside Terminal.app
@@ -87,9 +88,9 @@ public class EspIdfInstallerUnix {
             builder.inheritIO();
             Process process = builder.start();
             int exitCode = process.waitFor();
-            Logger.info("ESP-IDF installation terminal closed with exit code " + exitCode);
+            LoggerFacade.getInstance().info("ESP-IDF installation terminal closed with exit code " + exitCode);
         } catch (IOException | InterruptedException e) {
-            Logger.error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
+            LoggerFacade.getInstance().error("Failed to launch terminal for ESP-IDF install: " + e.getMessage());
         }
     }
 }

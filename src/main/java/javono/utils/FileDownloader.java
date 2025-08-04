@@ -1,6 +1,7 @@
 package javono.utils;
 
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -10,11 +11,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 
-public class FileDownloader {
+class FileDownloader {
 
     public static boolean debug = false;
 
-    public static void downloadWithResume(String urlString, Path destination) throws IOException, InterruptedException {
+    public void downloadWithResume(String urlString, Path destination) throws IOException, InterruptedException {
         File finalFile = destination.toFile();
         File tempFile = new File(finalFile.getAbsolutePath() + ".part");
 
@@ -27,10 +28,10 @@ public class FileDownloader {
 
             // ✅ Already downloaded
             if (existingSize == expectedTotal) {
-                Logger.success("File already downloaded (" + (existingSize / (1024 * 1024)) + " MB). Finalizing...");
+                LoggerFacade.getInstance().success("File already downloaded (" + (existingSize / (1024 * 1024)) + " MB). Finalizing...");
                 if (finalFile.exists()) finalFile.delete();
                 if (tempFile.renameTo(finalFile)) {
-                    Logger.success("Download complete.");
+                    LoggerFacade.getInstance().success("Download complete.");
                 } else {
                     throw new IOException("Failed to rename .part file.");
                 }
@@ -41,7 +42,7 @@ public class FileDownloader {
                 HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
                 if (existingSize > 0) {
                     connection.setRequestProperty("Range", "bytes=" + existingSize + "-");
-                    Logger.info("Resuming download from: " + (existingSize / (1024 * 1024)) + " MB");
+                    LoggerFacade.getInstance().info("Resuming download from: " + (existingSize / (1024 * 1024)) + " MB");
                 }
 
                 connection.connect();
@@ -79,7 +80,7 @@ public class FileDownloader {
                 if (tempFile.length() == expectedTotal) {
                     if (finalFile.exists()) finalFile.delete();
                     if (tempFile.renameTo(finalFile)) {
-                        Logger.success("Download completed successfully.");
+                        LoggerFacade.getInstance().success("Download completed successfully.");
                     } else {
                         throw new IOException("Failed to rename temp file.");
                     }
@@ -91,10 +92,10 @@ public class FileDownloader {
                 retryCount++;
 
                 if (tempFile.exists() && tempFile.length() == expectedTotal) {
-                    Logger.success("File is already fully downloaded. Finalizing...");
+                    LoggerFacade.getInstance().success("File is already fully downloaded. Finalizing...");
                     if (finalFile.exists()) finalFile.delete();
                     if (tempFile.renameTo(finalFile)) {
-                        Logger.success("Renamed successfully.");
+                        LoggerFacade.getInstance().success("Renamed successfully.");
                         return;
                     }
                 }
@@ -103,9 +104,9 @@ public class FileDownloader {
                     throw new IOException("Maximum retries reached.");
                 }
 
-                Logger.warn("Network error or disconnected. Waiting to retry in 5 seconds...");
+                LoggerFacade.getInstance().warn("Network error or disconnected. Waiting to retry in 5 seconds...");
                 Thread.sleep(5000);
-                Logger.info("Retrying download from: " + (tempFile.length() / (1024 * 1024)) + " MB");
+                LoggerFacade.getInstance().info("Retrying download from: " + (tempFile.length() / (1024 * 1024)) + " MB");
             }
         }
     }
@@ -116,12 +117,12 @@ public class FileDownloader {
         conn.connect();
         long size = conn.getContentLengthLong();
         conn.disconnect();
-        Logger.info("Expected total size: " + (size / (1024 * 1024)) + " MB");
+        LoggerFacade.getInstance().info("Expected total size: " + (size / (1024 * 1024)) + " MB");
         return size;
     }
 
     private static void log(String msg) {
-        if (debug) Logger.info(msg);
+        if (debug) LoggerFacade.getInstance().info(msg);
     }
 
     public static void downloadFile(String urlString, Path destination) throws IOException {
@@ -141,9 +142,9 @@ public class FileDownloader {
 
         long expectedSize = connection.getContentLengthLong();
         if (expectedSize <= 0) {
-            Logger.warn("Warning: Unable to determine expected file size.");
+            LoggerFacade.getInstance().warn("Warning: Unable to determine expected file size.");
         } else {
-            Logger.info("Expected file size: " + (expectedSize / (1024 * 1024)) + " MB");
+            LoggerFacade.getInstance().info("Expected file size: " + (expectedSize / (1024 * 1024)) + " MB");
         }
         connection.disconnect();
 
@@ -157,7 +158,7 @@ public class FileDownloader {
             long totalRead = 0;
             long lastPrintTime = System.currentTimeMillis();
 
-            Logger.info("⬇️ Downloading: " + urlString);
+            LoggerFacade.getInstance().info("⬇️ Downloading: " + urlString);
 
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
@@ -183,9 +184,9 @@ public class FileDownloader {
         // Rename temp file to final destination
         Files.move(tempFile, destination, StandardCopyOption.REPLACE_EXISTING);
         if (expectedSize > 0) {
-            Logger.info("\r" + buildProgressBar(100) + " 100%\n");
+            LoggerFacade.getInstance().info("\r" + buildProgressBar(100) + " 100%\n");
         }
-        Logger.success("Download complete: " + destination);
+        LoggerFacade.getInstance().success("Download complete: " + destination);
     }
 
     private static String buildProgressBar(int percent) {

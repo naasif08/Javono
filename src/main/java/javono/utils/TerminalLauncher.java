@@ -1,17 +1,19 @@
 package javono.utils;
 
-import javono.logger.Logger;
+
+
+import javono.logger.LoggerFacade;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 
-public class TerminalLauncher {
+class TerminalLauncher {
 
     /**
      * Open a terminal window, run a command (with optional sudo), and block until it's done.
      */
-    public static void openSudoCommandInTerminal(String command) throws IOException, InterruptedException {
+    public void openSudoCommandInTerminal(String command) throws IOException, InterruptedException {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("mac")) {
@@ -56,12 +58,12 @@ public class TerminalLauncher {
 
         new ProcessBuilder("bash", "-c", terminalCommand).start();
 
-        Logger.info("⏳ Waiting for terminal task to complete...");
+        LoggerFacade.getInstance().info("⏳ Waiting for terminal task to complete...");
         while (!doneFlag.exists()) {
             Thread.sleep(1000);
         }
 
         doneFlag.delete();
-        Logger.info("Terminal task completed.");
+        LoggerFacade.getInstance().info("Terminal task completed.");
     }
 }

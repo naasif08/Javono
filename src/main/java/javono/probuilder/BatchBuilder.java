@@ -1,7 +1,9 @@
 package javono.probuilder;
 
-import javono.detector.ToolPaths;
-import javono.logger.Logger;
+import javono.detector.DetectorFacade;
+import javono.detector.OS;
+import javono.logger.LoggerFacade;
+
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,22 +11,21 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BatchBuilder {
+class BatchBuilder {
 
-    private static final String IDF_PATH = ToolPaths.idfPath;
-    private static final String PYTHON_EXE_PATH = ToolPaths.pythonExecutablePath;
-    private static final String CONSTRAINTS_PATH = ToolPaths.constraintsPath;
-    private static final String PATH = Stream.of(ToolPaths.xtensaGdbPath, ToolPaths.xtensaToolchainPath, ToolPaths.cMakePath, ToolPaths.openOcdBin, ToolPaths.ninjaPath, ToolPaths.idfPyPath, ToolPaths.cCacheBinPath, ToolPaths.dfuUtilBinPath, ToolPaths.pythonPath, ToolPaths.openOcdScriptsPath).filter(p -> p != null && !p.isBlank()).collect(Collectors.joining(";"));
-
-    private static final String OPENOCD_SCRIPTS = ToolPaths.openOcdScriptsPath;
-    private static final String GIT_PATH = ToolPaths.gitPath;
+    private static final String IDF_PATH = DetectorFacade.getInstance().getIdfPath();
+    private static final String PYTHON_EXE_PATH = DetectorFacade.getInstance().getPythonExecutablePath();
+    private static final String CONSTRAINTS_PATH = DetectorFacade.getInstance().getConstraintsPath();
+    private static final String PATH = Stream.of(DetectorFacade.getInstance().getXtensaGdbPath(), DetectorFacade.getInstance().getXtensaToolchainPath(), DetectorFacade.getInstance().getcMakePath(), DetectorFacade.getInstance().getOpenOcdBin(), DetectorFacade.getInstance().getNinjaPath(), DetectorFacade.getInstance().getIdfPyPath(), DetectorFacade.getInstance().getcCacheBinPath(), DetectorFacade.getInstance().getDfuUtilBinPath(), DetectorFacade.getInstance().getPythonPath(), DetectorFacade.getInstance().getOpenOcdScriptsPath()).filter(p -> p != null && !p.isBlank()).collect(Collectors.joining(";"));
+    private static final String OPENOCD_SCRIPTS = DetectorFacade.getInstance().getOpenOcdScriptsPath();
+    private static final String GIT_PATH = DetectorFacade.getInstance().getGitPath();
 
     public void writeBuildScripts(File projectDir, String comPort) throws IOException {
-        String osName = System.getProperty("os.name").toLowerCase();
+        OS osName = OS.detect();
 
-        if (osName.contains("win")) {
+        if (osName.isWindows()) {
             writeBatchFile(projectDir, comPort);
-        } else if (osName.contains("mac") || osName.contains("nix") || osName.contains("nux")) {
+        } else if (osName.isMac() || osName.isLinux()) {
             writeBashScript(projectDir, comPort);
         } else {
             throw new UnsupportedOperationException("Unsupported OS for script generation: " + osName);
@@ -71,25 +72,15 @@ public class BatchBuilder {
                 )
                 
                 echo Build and flash completed.
-                """.formatted(
-                IDF_PATH,
-                OPENOCD_SCRIPTS,
-                PYTHON_EXE_PATH,
-                idfPythonEnvPath,  // derived from PYTHON_EXE_PATH folder, as before
-                CONSTRAINTS_PATH,
-                GIT_PATH,
-                PATH,
-                projectDir.getAbsolutePath(),
-                comPort,
-                comPort
-        );
+                """.formatted(IDF_PATH, OPENOCD_SCRIPTS, PYTHON_EXE_PATH, idfPythonEnvPath,  // derived from PYTHON_EXE_PATH folder, as before
+                CONSTRAINTS_PATH, GIT_PATH, PATH, projectDir.getAbsolutePath(), comPort, comPort);
 
 
         try (FileWriter writer = new FileWriter(batchFile)) {
             writer.write(batchContent);
         }
 
-        Logger.success("Batch file written to: " + batchFile.getAbsolutePath());
+        LoggerFacade.getInstance().success("Batch file written to: " + batchFile.getAbsolutePath());
 
     }
 
@@ -129,12 +120,7 @@ public class BatchBuilder {
                 
                 echo "Build and flash completed."
                 
-                """.formatted(
-                ToolPaths.idfPath,
-                projectDir.getAbsolutePath(),
-                comPort,
-                comPort
-        );
+                """.formatted(DetectorFacade.getInstance().getIdfPath(), projectDir.getAbsolutePath(), comPort, comPort);
 
         try (FileWriter writer = new FileWriter(bashFile)) {
             writer.write(bashContent);
@@ -142,7 +128,7 @@ public class BatchBuilder {
 
         bashFile.setExecutable(true); // Make script executable
 
-        Logger.success("Bash script written to: " + bashFile.getAbsolutePath());
+        LoggerFacade.getInstance().success("Bash script written to: " + bashFile.getAbsolutePath());
     }
 
 

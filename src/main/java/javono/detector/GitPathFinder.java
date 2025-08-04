@@ -6,11 +6,11 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class GitPathFinder {
+class GitPathFinder {
 
     // This method returns the path to git executable either inside esp-idf portable folder (Windows),
     // or system git path by checking 'which' command on Linux/macOS
-    public static String findGitPath(Path espIdfRoot) {
+    public String findGitPath(Path espIdfRoot) {
         String os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
 
         try {

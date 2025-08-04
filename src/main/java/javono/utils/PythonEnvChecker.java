@@ -1,13 +1,14 @@
 package javono.utils;
 
-import javono.installer.PythonInstaller;
-import javono.logger.Logger;
+import javono.installer.InstallerFacade;
+import javono.logger.LoggerFacade;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class PythonEnvChecker {
+class PythonEnvChecker {
 
     public static boolean isPythonCommandAvailable() {
         return runCommand("python3", "--version") == 0;
@@ -29,9 +30,7 @@ public class PythonEnvChecker {
     private static String captureOutput(String... command) {
         StringBuilder output = new StringBuilder();
         try {
-            Process process = new ProcessBuilder(command)
-                    .redirectErrorStream(true)
-                    .start();
+            Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
@@ -49,8 +48,7 @@ public class PythonEnvChecker {
 
     private static int runCommand(String... command) {
         try {
-            Process process = new ProcessBuilder(command)
-                    .redirectErrorStream(true) // combine stdout and stderr
+            Process process = new ProcessBuilder(command).redirectErrorStream(true) // combine stdout and stderr
                     .start();
 
             // Optionally consume output to avoid blocking
@@ -66,12 +64,12 @@ public class PythonEnvChecker {
         }
     }
 
-    public static void warnAndInstallIfMissing() {
+    public void warnAndInstallIfMissing() {
         if (!isPythonCommandAvailable()) {
-            Logger.info("❌ Python3 is not installed.");
+            LoggerFacade.getInstance().info("❌ Python3 is not installed.");
             try {
-                Logger.info("Installing Python");
-                PythonInstaller.ensureMinicondaInstalled();
+                LoggerFacade.getInstance().info("Installing Python");
+                InstallerFacade.getInstance().ensureMinicondaInstalled();
                 return;
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
@@ -104,7 +102,7 @@ public class PythonEnvChecker {
             if (input != null && (input.equalsIgnoreCase("y") || input.equalsIgnoreCase("yes"))) {
                 try {
                     try {
-                        TerminalLauncher.openSudoCommandInTerminal("sudo apt install python3-venv");
+                        UtilsFacade.getInstance().openSudoCommandInTerminal("sudo apt install python3-venv");
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }

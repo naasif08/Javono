@@ -1,6 +1,7 @@
 package javono.config;
 
-import javono.detector.PathDetector;
+
+import javono.detector.DetectorFacade;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,8 +53,8 @@ public class Esp32ConfigManager {
     }
 
     public String getComPort() {
-        if (PathDetector.detectEsp32Port() != null) {
-            return PathDetector.detectEsp32Port();
+        if (DetectorFacade.getInstance().detectEsp32Port() != null) {
+            return DetectorFacade.getInstance().detectEsp32Port();
         }
         return properties.getProperty("comPort");  // default Windows COM port
     }

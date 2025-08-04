@@ -1,8 +1,9 @@
 package javono.probuilder;
 
+import javono.detector.DetectorFacade;
 import javono.detector.OS;
-import javono.detector.ToolPaths;
-import javono.logger.Logger;
+import javono.logger.LoggerFacade;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -10,16 +11,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ProjectCreator {
+class ProjectCreator {
 
     private static String PROJECT_DIR = "Null Project";
 
-    public static File createProject() throws IOException {
-        File projectDir = ToolPaths.getProjectDir("ESP32Project");
+    public File createProject() throws IOException {
+        File projectDir = DetectorFacade.getInstance().getProjectDir("ESP32Project");
         ProjectCreator.PROJECT_DIR = projectDir.getAbsolutePath();
         Path mainDir = projectDir.toPath().resolve("main");
         Files.createDirectories(mainDir);
-        Logger.info("Created project directory: " + projectDir.getAbsolutePath());
+        LoggerFacade.getInstance().info("Created project directory: " + projectDir.getAbsolutePath());
         if (OS.detect().isWindows()) {
             writeFiles();
         } else {
@@ -44,7 +45,7 @@ public class ProjectCreator {
         writeTextFile(PROJECT_DIR + "\\main\\Javono_serial.c", serialSourceFile());
         writeTextFile(PROJECT_DIR + "\\main\\main.c", mainCContent());
 
-        Logger.info("Created all project files.");
+        LoggerFacade.getInstance().info("Created all project files.");
     }
 
     private static void writeFilesLinux() throws IOException {
@@ -63,12 +64,12 @@ public class ProjectCreator {
         writeTextFile(PROJECT_DIR + "//main//Javono_serial.c", serialSourceFile());
         writeTextFile(PROJECT_DIR + "//main//main.c", mainCContent());
 
-        Logger.info("Created all project files.");
+        LoggerFacade.getInstance().info("Created all project files.");
     }
 
     private static void writeTextFile(String path, String content) throws IOException {
         Files.write(Paths.get(path), content.getBytes());
-        Logger.success("Created: " + path);
+        LoggerFacade.getInstance().success("Created: " + path);
     }
 
     private static String cmakeListsTxtContent() {

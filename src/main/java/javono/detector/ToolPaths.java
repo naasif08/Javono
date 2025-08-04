@@ -1,6 +1,7 @@
 package javono.detector;
 
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,32 +10,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-public final class ToolPaths {
+final class ToolPaths {
 
     private static boolean initialized = false;
+    private static PathDetector pathDetector = new PathDetector();
 
     // Public static paths
-    public static String idfPath;
-    public static String pythonPath;
-    public static String pythonExecutablePath;
-    public static String toolchainPath;
-    public static String serialPort;
-    public static String gitPath;
-    public static String xtensaGdbPath;
-    public static String xtensaToolchainPath;
-    public static String espClangPath;
-    public static String cMakePath;
-    public static String openOcdBin;
-    public static String ninjaPath;
-    public static String idfPyPath;
-    public static String cCacheBinPath;
-    public static String dfuUtilBinPath;
-    public static String openOcdScriptsPath;
-    public static String constraintsPath;
+    private String idfPath;
+    private String pythonPath;
+    private String pythonExecutablePath;
+    private String toolchainPath;
+    private String serialPort;
+    private String gitPath;
+    private String xtensaGdbPath;
+    private String xtensaToolchainPath;
+    private String espClangPath;
+    private String cMakePath;
+    private String openOcdBin;
+    private String ninjaPath;
+    private String idfPyPath;
+    private String cCacheBinPath;
+    private String dfuUtilBinPath;
+    private String openOcdScriptsPath;
+    private String constraintsPath;
+    private File dotJavonoDir;
 
-    private static File dotJavonoDir;
-
-    public static void init() {
+    public void init() {
         if (initialized) return;
 
         dotJavonoDir = new File(System.getProperty("user.dir"), ".javono");
@@ -42,22 +43,22 @@ public final class ToolPaths {
 
         ensureJavonoPropertiesTemplate();
 
-        idfPath = PathDetector.detectIdfPath();
-        pythonPath = PathDetector.detectPythonPath();
-        pythonExecutablePath = PathDetector.detectPythonExecutable();
-        toolchainPath = PathDetector.detectToolchainBin();
-        serialPort = PathDetector.detectEsp32Port();
-        gitPath = PathDetector.findEspressifGitPath();
-        xtensaGdbPath = PathDetector.detectXtensaGdbPath();
-        xtensaToolchainPath = PathDetector.detectXtensaToolchainPath();
-        cMakePath = PathDetector.detectCmakePath();
-        openOcdBin = PathDetector.detectOpenOcdBin();
-        ninjaPath = PathDetector.detectNinjaPath();
-        idfPyPath = PathDetector.detectIdfPyPath();
-        cCacheBinPath = PathDetector.detectCcacheBin();
-        dfuUtilBinPath = PathDetector.detectDfuUtilBin();
-        openOcdScriptsPath = PathDetector.detectOpenOcdScriptsPath();
-        constraintsPath = PathDetector.getConstraintFilePath();
+        idfPath = pathDetector.detectIdfPath();
+        pythonPath = pathDetector.detectPythonPath();
+        pythonExecutablePath = pathDetector.detectPythonExecutable();
+        toolchainPath = pathDetector.detectToolchainBin();
+        serialPort = pathDetector.detectEsp32Port();
+        gitPath = pathDetector.findEspressifGitPath();
+        xtensaGdbPath = pathDetector.detectXtensaGdbPath();
+        xtensaToolchainPath = pathDetector.detectXtensaToolchainPath();
+        cMakePath = pathDetector.detectCmakePath();
+        openOcdBin = pathDetector.detectOpenOcdBin();
+        ninjaPath = pathDetector.detectNinjaPath();
+        idfPyPath = pathDetector.detectIdfPyPath();
+        cCacheBinPath = pathDetector.detectCcacheBin();
+        dfuUtilBinPath = pathDetector.detectDfuUtilBin();
+        openOcdScriptsPath = pathDetector.detectOpenOcdScriptsPath();
+        constraintsPath = pathDetector.getConstraintFilePath();
 
         loadPropertiesOverrides();
         validatePaths();
@@ -65,11 +66,11 @@ public final class ToolPaths {
         initialized = true;
     }
 
-    public static boolean isInitialized() {
+    public boolean isInitialized() {
         return initialized;
     }
 
-    public static File getDotJavonoDir() {
+    public File getDotJavonoDir() {
         if (dotJavonoDir == null) {
             dotJavonoDir = new File(System.getProperty("user.dir"), ".Javono");
             if (!dotJavonoDir.exists()) {
@@ -82,7 +83,7 @@ public final class ToolPaths {
         return dotJavonoDir;
     }
 
-    public static File getProjectDir(String projectName) {
+    public File getProjectDir(String projectName) {
         Path projectDir = getDotJavonoDir().toPath().resolve(projectName);
         try {
             Files.createDirectories(projectDir);
@@ -92,7 +93,7 @@ public final class ToolPaths {
         return projectDir.toFile();
     }
 
-    private static void ensureJavonoPropertiesTemplate() {
+    private void ensureJavonoPropertiesTemplate() {
         Path propPath = getDotJavonoDir().toPath().resolve("javono.properties");
         if (Files.exists(propPath)) return;
 
@@ -122,20 +123,20 @@ public final class ToolPaths {
 
         try {
             Files.writeString(propPath, template);
-            Logger.success("Created .Javono/javono.properties template.");
+            LoggerFacade.getInstance().success("Created .Javono/javono.properties template.");
         } catch (IOException e) {
-            Logger.error("Failed to create javono.properties: " + e.getMessage());
+            LoggerFacade.getInstance().error("Failed to create javono.properties: " + e.getMessage());
         }
     }
 
-    private static void loadPropertiesOverrides() {
+    private void loadPropertiesOverrides() {
         Path propPath = getDotJavonoDir().toPath().resolve("javono.properties");
         if (!Files.exists(propPath)) return;
 
         try (InputStream in = Files.newInputStream(propPath)) {
             Properties props = new Properties();
             props.load(in);
-            Logger.info("Loaded manual overrides from javono.properties");
+            LoggerFacade.getInstance().info("Loaded manual overrides from javono.properties");
 
             idfPath = resolve(props, "javono.idfPath", idfPath);
             pythonPath = resolve(props, "javono.pythonPath", pythonPath);
@@ -169,7 +170,7 @@ public final class ToolPaths {
     }
 
 
-    private static void validatePaths() {
+    private void validatePaths() {
         check("idfPath", idfPath);
         check("idfPyPath", idfPyPath);
         check("pythonPath", pythonPath);
@@ -184,11 +185,81 @@ public final class ToolPaths {
     private static void check(String name, String value) {
         if (value == null || value.trim().isEmpty() || value.equals("null")) {
             System.err.println("❌ Missing required path: javono." + name);
-            System.err.println("→ Fix it in .Javono/javono.properties or set it manually.");
+            System.err.println("→ Fix it in .javono/javono.properties or set it manually");
+            if (name.equals("serialPort")) System.err.println("→ or you might not have connected ESP32 to your PC.");
             System.exit(1);
         }
     }
 
-    private ToolPaths() {
-    } // prevent instantiation
+    public static PathDetector getPathDetector() {
+        return pathDetector;
+    }
+
+    public String getIdfPath() {
+        return idfPath;
+    }
+
+    public String getPythonPath() {
+        return pythonPath;
+    }
+
+    public String getPythonExecutablePath() {
+        return pythonExecutablePath;
+    }
+
+    public String getToolchainPath() {
+        return toolchainPath;
+    }
+
+    public String getSerialPort() {
+        return serialPort;
+    }
+
+    public String getGitPath() {
+        return gitPath;
+    }
+
+    public String getXtensaGdbPath() {
+        return xtensaGdbPath;
+    }
+
+    public String getXtensaToolchainPath() {
+        return xtensaToolchainPath;
+    }
+
+    public String getEspClangPath() {
+        return espClangPath;
+    }
+
+    public String getcMakePath() {
+        return cMakePath;
+    }
+
+    public String getOpenOcdBin() {
+        return openOcdBin;
+    }
+
+    public String getNinjaPath() {
+        return ninjaPath;
+    }
+
+    public String getIdfPyPath() {
+        return idfPyPath;
+    }
+
+    public String getcCacheBinPath() {
+        return cCacheBinPath;
+    }
+
+    public String getDfuUtilBinPath() {
+        return dfuUtilBinPath;
+    }
+
+    public String getOpenOcdScriptsPath() {
+        return openOcdScriptsPath;
+    }
+
+    public String getConstraintsPath() {
+        return constraintsPath;
+    }
 }

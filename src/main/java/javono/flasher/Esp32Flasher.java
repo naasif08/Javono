@@ -1,11 +1,12 @@
 package javono.flasher;
 
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.*;
 import java.util.Locale;
 
-public class Esp32Flasher {
+class Esp32Flasher {
 
     public void flashProject(File projectDir) throws IOException, InterruptedException {
         String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
@@ -21,7 +22,7 @@ public class Esp32Flasher {
         if (exitCode != 0) {
             throw new RuntimeException("Flashing failed with exit code: " + exitCode);
         } else {
-            Logger.success("Flashing finished successfully.");
+            System.out.println("Flashing finished successfully.");
         }
     }
 

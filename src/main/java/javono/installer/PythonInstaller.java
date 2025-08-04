@@ -1,7 +1,8 @@
 package javono.installer;
 
-import javono.logger.Logger;
-import javono.utils.FileDownloader;
+
+import javono.logger.LoggerFacade;
+import javono.utils.UtilsFacade;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,9 +13,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import static javono.detector.PathDetector.VERSION;
+import static javono.detector.DetectorFacade.VERSION;
 
-public class PythonInstaller {
+class PythonInstaller {
     private static final Path ESP_IDF_PATH = getDefaultInstallPath();
     private static final Path INSTALL_DIR = ESP_IDF_PATH.resolve("miniconda");
 
@@ -27,10 +28,10 @@ public class PythonInstaller {
         }
     }
 
-    public static void ensureMinicondaInstalled() throws IOException, InterruptedException {
+    public void ensureMinicondaInstalled() throws IOException, InterruptedException {
         Path pythonExe = getPythonExecutable();
         if (Files.exists(pythonExe)) {
-            Logger.info("Miniconda Python already installed at: " + pythonExe);
+            LoggerFacade.getInstance().info("Miniconda Python already installed at: " + pythonExe);
             return;
         }
 
@@ -42,8 +43,8 @@ public class PythonInstaller {
         String filename = url.substring(url.lastIndexOf("/") + 1);
         Path installerPath = Paths.get(System.getProperty("java.io.tmpdir")).resolve(filename);
 
-        Logger.info("Downloading Miniconda from: " + url);
-        FileDownloader.downloadWithResume(url, installerPath);
+        LoggerFacade.getInstance().info("Downloading Miniconda from: " + url);
+        UtilsFacade.getInstance().downloadWithResume(url, installerPath);
 
         if ("windows".equals(os)) {
             runWindowsInstaller(installerPath);
@@ -52,20 +53,15 @@ public class PythonInstaller {
         }
 
         Files.deleteIfExists(installerPath);
-        Logger.success("Miniconda installed successfully at: " + pythonExe);
+        LoggerFacade.getInstance().success("Miniconda installed successfully at: " + pythonExe);
     }
 
     private static void runWindowsInstaller(Path installerPath) throws IOException, InterruptedException {
-        List<String> command = Arrays.asList(
-                installerPath.toString(),
-                "/S",                                // Silent mode
-                "/InstallationType=JustMe",
-                "/AddToPath=0",
-                "/RegisterPython=0",
-                "/D=" + INSTALL_DIR.toString().replace("/", "\\") // Windows needs backslashes
+        List<String> command = Arrays.asList(installerPath.toString(), "/S",                                // Silent mode
+                "/InstallationType=JustMe", "/AddToPath=0", "/RegisterPython=0", "/D=" + INSTALL_DIR.toString().replace("/", "\\") // Windows needs backslashes
         );
 
-        Logger.info("Running Windows Miniconda installer: " + String.join(" ", command));
+        LoggerFacade.getInstance().info("Running Windows Miniconda installer: " + String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
@@ -81,11 +77,11 @@ public class PythonInstaller {
         int checkExit = checkProcess.waitFor();
 
         if (checkExit == 0) {
-            Logger.info("python3-venv is already available.");
+            LoggerFacade.getInstance().info("python3-venv is already available.");
             return;
         }
 
-        Logger.info("python3-venv not found. Attempting to install...");
+        LoggerFacade.getInstance().info("python3-venv not found. Attempting to install...");
 
         // Try installing via apt
         ProcessBuilder install = new ProcessBuilder("sudo", "apt-get", "update");
@@ -100,21 +96,17 @@ public class PythonInstaller {
             throw new IOException("Failed to install python3-venv via apt-get.");
         }
 
-        Logger.success("python3-venv installed successfully.");
+        LoggerFacade.getInstance().success("python3-venv installed successfully.");
     }
 
 
     private static void runUnixInstaller(Path installerPath) throws IOException, InterruptedException {
         Files.setPosixFilePermissions(installerPath, PosixFilePermissions.fromString("rwxr-xr-x"));
 
-        List<String> command = Arrays.asList(
-                "bash",
-                installerPath.toAbsolutePath().toString(),
-                "-b",  // batch (silent)
-                "-p", INSTALL_DIR.toString()
-        );
+        List<String> command = Arrays.asList("bash", installerPath.toAbsolutePath().toString(), "-b",  // batch (silent)
+                "-p", INSTALL_DIR.toString());
 
-        Logger.info("Running Unix Miniconda installer: " + String.join(" ", command));
+        LoggerFacade.getInstance().info("Running Unix Miniconda installer: " + String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();

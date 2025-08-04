@@ -1,8 +1,9 @@
 package javono.installer;
 
+import javono.detector.DetectorFacade;
 import javono.detector.OS;
-import javono.detector.ToolPaths;
-import javono.logger.Logger;
+import javono.logger.LoggerFacade;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,15 +15,15 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static javono.detector.PathDetector.VERSION;
+import static javono.detector.DetectorFacade.VERSION;
 
-public class ESPInstaller {
+class EspIdfScriptInstaller {
 
     private static final Path ESP_IDF_PATH = getDefaultInstallPath();
     private static final Path PYTHON_PATH = ESP_IDF_PATH.resolve("python-embed").resolve(getPythonBinary());
     private static final Path GIT_PATH = ESP_IDF_PATH.resolve("portable-git").resolve("cmd");
-    private static final Path PATH_UNIX = Path.of(Stream.of(ToolPaths.constraintsPath, ToolPaths.xtensaGdbPath, ToolPaths.xtensaToolchainPath, ToolPaths.cMakePath, ToolPaths.openOcdBin, ToolPaths.ninjaPath, ToolPaths.idfPyPath, ToolPaths.cCacheBinPath, ToolPaths.dfuUtilBinPath, ToolPaths.pythonPath, ToolPaths.openOcdScriptsPath).filter(p -> p != null && !p.isBlank()).collect(Collectors.joining(":")));
-    private static final Path PATH = Path.of(Stream.of(ToolPaths.constraintsPath, ToolPaths.xtensaGdbPath, ToolPaths.xtensaToolchainPath, ToolPaths.cMakePath, ToolPaths.openOcdBin, ToolPaths.ninjaPath, ToolPaths.idfPyPath, ToolPaths.cCacheBinPath, ToolPaths.dfuUtilBinPath, ToolPaths.pythonPath, ToolPaths.openOcdScriptsPath).filter(p -> p != null && !p.isBlank()).collect(Collectors.joining(";")));
+    private static final Path PATH_UNIX = Path.of(Stream.of(DetectorFacade.getInstance().getConstraintsPath(), DetectorFacade.getInstance().getXtensaGdbPath(), DetectorFacade.getInstance().getXtensaToolchainPath(), DetectorFacade.getInstance().getcMakePath(), DetectorFacade.getInstance().getOpenOcdBin(), DetectorFacade.getInstance().getNinjaPath(), DetectorFacade.getInstance().getIdfPyPath(), DetectorFacade.getInstance().getcCacheBinPath(), DetectorFacade.getInstance().getDfuUtilBinPath(), DetectorFacade.getInstance().getPythonPath(), DetectorFacade.getInstance().getOpenOcdScriptsPath()).filter(p -> p != null && !p.isBlank()).collect(Collectors.joining(":")));
+    private static final Path PATH = Path.of(Stream.of(DetectorFacade.getInstance().getConstraintsPath(), DetectorFacade.getInstance().getXtensaGdbPath(), DetectorFacade.getInstance().getXtensaToolchainPath(), DetectorFacade.getInstance().getcMakePath(), DetectorFacade.getInstance().getOpenOcdBin(), DetectorFacade.getInstance().getNinjaPath(), DetectorFacade.getInstance().getIdfPyPath(), DetectorFacade.getInstance().getcCacheBinPath(), DetectorFacade.getInstance().getDfuUtilBinPath(), DetectorFacade.getInstance().getPythonPath(), DetectorFacade.getInstance().getOpenOcdScriptsPath()).filter(p -> p != null && !p.isBlank()).collect(Collectors.joining(";")));
     private static final Path TOOLS_PATH = ESP_IDF_PATH.resolve(".espressif").resolve("tools");
     private static final Path PYTHON_ENV_PATH = ESP_IDF_PATH.resolve(".espressif").resolve("python_env");
 
@@ -35,7 +36,7 @@ public class ESPInstaller {
         }
     }
 
-    public static void runInstallScript() throws IOException, InterruptedException {
+    public void runInstallScript() throws IOException, InterruptedException {
         OS os = OS.detect();
 
         Path scriptPath;
@@ -55,7 +56,7 @@ public class ESPInstaller {
             throw new IOException("Install script not found: " + scriptPath);
         }
 
-        Logger.info("Running ESP-IDF install script: " + scriptPath);
+        LoggerFacade.getInstance().info("Running ESP-IDF install script: " + scriptPath);
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(ESP_IDF_PATH.toFile());
@@ -96,11 +97,11 @@ public class ESPInstaller {
 
         int exitCode = pb.start().waitFor();
         if (exitCode != 0) {
-            Logger.error("Install script exited with code " + exitCode);
+            LoggerFacade.getInstance().error("Install script exited with code " + exitCode);
             throw new RuntimeException("ESP-IDF installation failed or incomplete.");
         }
 
-        Logger.success("ESP-IDF install script completed successfully.");
+        LoggerFacade.getInstance().success("ESP-IDF install script completed successfully.");
     }
 
     private static String detectOS() {

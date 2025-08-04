@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * Handles OTA firmware upload to the Spring Boot backend for ESP32 devices.
  */
-public class OTAUploader {
+class OTAUploader {
 
     private static final String UPLOAD_URL = "http://your-backend-host/api/firmware/upload";
 

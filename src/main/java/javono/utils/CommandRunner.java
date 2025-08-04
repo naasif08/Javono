@@ -1,6 +1,8 @@
 package javono.utils;
 
-import javono.logger.Logger;
+
+
+import javono.logger.LoggerFacade;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,11 +12,11 @@ import java.util.Arrays;
 /**
  * Utility for running system shell commands.
  */
-public class CommandRunner {
+class CommandRunner {
 
 
     public static int runCommand(String... commandParts) throws IOException, InterruptedException {
-        Logger.info("Running: " + String.join(" ", commandParts));
+        LoggerFacade.getInstance().info("Running: " + String.join(" ", commandParts));
         ProcessBuilder pb = new ProcessBuilder(commandParts);
         pb.inheritIO(); // optional: prints output directly
         Process process = pb.start();
@@ -28,7 +30,7 @@ public class CommandRunner {
      * @return exit code of the process
      * @throws IOException if process cannot be started
      */
-    public static int runBlocking(String[] command) throws IOException {
+    public int runBlocking(String[] command) throws IOException {
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
 
@@ -38,7 +40,7 @@ public class CommandRunner {
                 new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Logger.info("[CMD] " + line);
+                LoggerFacade.getInstance().info("[CMD] " + line);
             }
         }
 
@@ -83,8 +85,8 @@ public class CommandRunner {
     /**
      * Logs and runs a command, mainly for debug.
      */
-    public static int runVerbose(String[] command) throws IOException {
-        Logger.info("[Running] " + Arrays.toString(command));
-        return runBlocking(command);
+    public int runVerbose(String[] command) throws IOException {
+        LoggerFacade.getInstance().info("[Running] " + Arrays.toString(command));
+        return this.runBlocking(command);
     }
 }

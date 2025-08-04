@@ -1,14 +1,11 @@
 package javono.builder.impl;
 
-import javono.detector.ToolPaths;
+import javono.detector.DetectorFacade;
 import javono.builder.JavonoBuilder;
-import javono.detector.PathDetector;
-import javono.logger.Logger;
-import javono.probuilder.ProjectCreator;
-import javono.probuilder.BatchBuilder;
-import javono.remote.GitHubArtifactDownloader;
-import javono.remote.GitHubUploader;
-import javono.remote.GitHubWorkflowRunner;
+
+import javono.logger.LoggerFacade;
+import javono.probuilder.ProjectBuilderFacade;
+import javono.remote.RemoteFacade;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,17 +31,17 @@ public class RemoteBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder build() {
-        if (!ToolPaths.isInitialized()) {
-            ToolPaths.init();
+        if (!DetectorFacade.getInstance().isToolPathsInitialized()) {
+            DetectorFacade.getInstance().initializeToolPaths();
         }
         try {
-            this.projectDir = ProjectCreator.createProject();
+            this.projectDir = ProjectBuilderFacade.getInstance().createProject();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        BatchBuilder JavonoBatchBuilder = new BatchBuilder();
+
         try {
-            JavonoBatchBuilder.writeBuildScripts(projectDir, PathDetector.detectEsp32Port());
+            ProjectBuilderFacade.getInstance().writeBuildScripts(projectDir, DetectorFacade.getInstance().detectEsp32Port());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -54,24 +51,22 @@ public class RemoteBuilder implements JavonoBuilder {
     @Override
     public JavonoBuilder flash() {
         try {
-            Path firmwareDir = ToolPaths.getDotJavonoDir().toPath().resolve("firmware");
+            Path firmwareDir = DetectorFacade.getInstance().getDotJavonoDir().toPath().resolve("firmware");
             Files.createDirectories(firmwareDir);
 
-            Logger.info("🚀 Uploading project to GitHub...");
+            LoggerFacade.getInstance().info("🚀 Uploading project to GitHub...");
 
             // 1. Push projectDir to a temp branch
-            GitHubUploader uploader = new GitHubUploader(githubRepoUrl, githubAccessToken);
-            String commitSHA = uploader.pushProject(projectDir);
+            String commitSHA = RemoteFacade.getInstance().pushProjectToGithub(projectDir);
 
             // 2. Trigger the GitHub Actions build
-            GitHubWorkflowRunner runner = new GitHubWorkflowRunner(githubRepoUrl, githubAccessToken);
-            String artifactUrl = String.valueOf(runner.waitForFirmwareArtifact(Path.of(commitSHA)));
+            String artifactUrl = String.valueOf(RemoteFacade.getInstance().waitForGithubFirmwareArtifact(Path.of(commitSHA)));
 
             // 3. Download firmware.bin to .Javono/firmware/
             Path outputFile = firmwareDir.resolve("firmware.bin");
-            GitHubArtifactDownloader.downloadArtifact(artifactUrl, outputFile, githubAccessToken);
+            RemoteFacade.getInstance().downloadGithubArtifact(artifactUrl, outputFile, githubAccessToken);
 
-            Logger.success("Firmware downloaded to: " + outputFile.toAbsolutePath());
+            LoggerFacade.getInstance().success("Firmware downloaded to: " + outputFile.toAbsolutePath());
 
         } catch (Exception e) {
             throw new RuntimeException("❌ Remote flashing failed.", e);

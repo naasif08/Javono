@@ -1,11 +1,12 @@
 package javono.utils;
 
 import javono.detector.OS;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class FileUtils {
+class FileUtils {
 
     public static Path getJavonoRootFolder() {
         String home = System.getProperty("user.home");
@@ -26,21 +27,19 @@ public class FileUtils {
         }
     }
 
-    public static void deleteDirectory(Path path) {
+    public void deleteDirectory(Path path) {
         if (!Files.exists(path)) return;
 
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<>() {
                 @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     Files.delete(file);
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                        throws IOException {
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                     Files.delete(dir);
                     return FileVisitResult.CONTINUE;
                 }

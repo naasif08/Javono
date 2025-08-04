@@ -1,6 +1,7 @@
 package javono.remote;
 
-import javono.logger.Logger;
+
+import javono.logger.LoggerFacade;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +11,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class GitHubArtifactDownloader {
+class GitHubArtifactDownloader {
 
     /**
      * Downloads a file from a GitHub artifact URL and saves it to the specified output location.
@@ -20,8 +21,8 @@ public class GitHubArtifactDownloader {
      * @param token       GitHub Personal Access Token (with repo permissions) for private repos
      * @throws IOException if any I/O error occurs
      */
-    public static void downloadArtifact(String artifactUrl, Path outputPath, String token) throws IOException {
-        Logger.info("Downloading artifact from GitHub...");
+    public void downloadArtifact(String artifactUrl, Path outputPath, String token) throws IOException {
+        LoggerFacade.getInstance().info("Downloading artifact from GitHub...");
         URL url = new URL(artifactUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -43,7 +44,7 @@ public class GitHubArtifactDownloader {
             }
         }
 
-        Logger.success("Artifact downloaded to: " + outputPath.toAbsolutePath());
+        LoggerFacade.getInstance().success("Artifact downloaded to: " + outputPath.toAbsolutePath());
     }
 }
 
