@@ -9,7 +9,7 @@ import java.nio.file.Path;
  * GitHubWorkflowBuilder generates a GitHub Actions workflow file for building
  * ESP32 firmware using ESP-IDF and uploading the final .bin to a Spring Boot backend.
  */
-public class GitHubWorkflowBuilder {
+class GitHubWorkflowBuilder {
 
     private final String backendUploadUrl;
     private final String deviceId;
@@ -28,47 +28,47 @@ public class GitHubWorkflowBuilder {
      */
     public String generateWorkflowYml() {
         return """
-        name: Build and Upload ESP32 Firmware
-
-        on:
-          push:
-            branches: [ main ]
-
-        jobs:
-          build:
-            runs-on: ubuntu-latest
-
-            steps:
-            - name: Checkout repository
-              uses: actions/checkout@v3
-
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                python-version: '3.11'
-
-            - name: Install ESP-IDF tools
-              run: |
-                sudo apt update
-                sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
-                git clone --recursive https://github.com/espressif/esp-idf.git
-                cd esp-idf
-                ./install.sh
-                echo "source $GITHUB_WORKSPACE/esp-idf/export.sh" >> $GITHUB_ENV
-
-            - name: Build Firmware
-              run: |
-                source esp-idf/export.sh
-                idf.py build
-
-            - name: Upload Firmware to Backend
-              run: |
-                curl -X POST %s \\
-                  -F "deviceId=%s" \\
-                  -F "authToken=%s" \\
-                  -F "firmware=@build/your_firmware.bin" \\
-                  --fail
-        """.formatted(
+                name: Build and Upload ESP32 Firmware
+                
+                on:
+                  push:
+                    branches: [ main ]
+                
+                jobs:
+                  build:
+                    runs-on: ubuntu-latest
+                
+                    steps:
+                    - name: Checkout repository
+                      uses: actions/checkout@v3
+                
+                    - name: Set up Python
+                      uses: actions/setup-python@v4
+                      with:
+                        python-version: '3.11'
+                
+                    - name: Install ESP-IDF tools
+                      run: |
+                        sudo apt update
+                        sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+                        git clone --recursive https://github.com/espressif/esp-idf.git
+                        cd esp-idf
+                        ./install.sh
+                        echo "source $GITHUB_WORKSPACE/esp-idf/export.sh" >> $GITHUB_ENV
+                
+                    - name: Build Firmware
+                      run: |
+                        source esp-idf/export.sh
+                        idf.py build
+                
+                    - name: Upload Firmware to Backend
+                      run: |
+                        curl -X POST %s \\
+                          -F "deviceId=%s" \\
+                          -F "authToken=%s" \\
+                          -F "firmware=@build/your_firmware.bin" \\
+                          --fail
+                """.formatted(
                 backendUploadUrl,
                 deviceId,
                 authToken

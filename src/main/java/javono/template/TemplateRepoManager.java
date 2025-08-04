@@ -10,7 +10,7 @@ import java.nio.file.Path;
 /**
  * Handles cloning and updating a firmware template GitHub repository.
  */
-public class TemplateRepoManager {
+class TemplateRepoManager {
 
     private final String repoUrl;
     private final String accessToken;
