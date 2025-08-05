@@ -12,7 +12,7 @@ class Logger {
     }
 
     public void error(String message) {
-        System.out.println(PREFIX + message);
+        System.err.println(PREFIX + message);
     }
 
     public void success(String message) {

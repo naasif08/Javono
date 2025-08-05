@@ -3,18 +3,31 @@ package javono.validator;
 import com.github.javaparser.*;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.nodeTypes.NodeWithName;
+import com.github.javaparser.ast.stmt.TryStmt;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import javono.annotations.JavonoEmbeddedUserMethod;
 import javono.annotations.JavonoEmbeddedLoop;
 import javono.annotations.JavonoEmbeddedInit;
 import javono.annotations.JavonoEmbeddedSketch;
+import javono.logger.LoggerFacade;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 class SketchValidator {
 
@@ -131,6 +144,46 @@ class SketchValidator {
         }
     }
 
+    public static List<String> listClassNamesFromLib() throws IOException {
+        List<String> classNames = new ArrayList<>();
+        String libPackagePath = "javono/lib";
+
+        URL url = Thread.currentThread().getContextClassLoader().getResource(libPackagePath);
+        if (url == null) {
+            throw new FileNotFoundException("Resource not found: " + libPackagePath);
+        }
+
+        if (url.getProtocol().equals("file")) {
+            // Running from IDE or unpackaged class folder
+            File libDir = new File(url.getPath());
+            if (libDir.exists()) {
+                for (File file : Objects.requireNonNull(libDir.listFiles())) {
+                    if (file.getName().endsWith(".class")) {
+                        String className = file.getName().replace(".class", "");
+                        classNames.add(className);
+                    }
+                }
+            }
+        } else if (url.getProtocol().equals("jar")) {
+            // Running from inside a JAR
+            String jarPath = url.getPath().substring(5, url.getPath().indexOf("!"));
+            try (JarFile jarFile = new JarFile(URLDecoder.decode(jarPath, "UTF-8"))) {
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (name.startsWith(libPackagePath) && name.endsWith(".class")) {
+                        String className = name.substring(name.lastIndexOf('/') + 1).replace(".class", "");
+                        classNames.add(className);
+                    }
+                }
+            }
+        }
+
+        return classNames;
+    }
+
+
     private static void validateFile(Path file, AtomicBoolean sketchFound) {
         try {
             // Use the configured parser here instead of StaticJavaParser
@@ -142,6 +195,100 @@ class SketchValidator {
                 cu.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
                     if (clazz.isAnnotationPresent(JavonoEmbeddedSketch.class)) {
                         sketchFound.set(true);
+
+                        clazz.findAll(TryStmt.class).forEach(tryStmt -> {
+                            LoggerFacade.getInstance().error("try-catch blocks are not allowed in @JavonoEmbeddedSketch classes.");
+                            System.exit(1);
+                        });
+
+
+                        clazz.getMethods().forEach(method -> {
+                            if (!method.getThrownExceptions().isEmpty()) {
+                                LoggerFacade.getInstance().error("Methods in @JavonoEmbeddedSketch class must not declare any thrown exceptions: " + method.getNameAsString());
+                                System.exit(1);
+                            }
+                        });
+
+
+                        //Starts: this is to restrict users to outside methods
+                        // 1. Collect all method names declared in this class
+                        Set<String> localMethodNames = clazz.getMethods().stream()
+                                .map(m -> m.getNameAsString())
+                                .collect(Collectors.toSet());
+
+                        // 2. Collect all javono.lib imports
+                        boolean wildcardImport = cu.getImports().stream()
+                                .anyMatch(imp -> imp.getNameAsString().equals("javono.lib") && imp.isAsterisk());
+
+
+                        Set<String> allowedImportedClassNames = cu.getImports().stream()
+                                .map(NodeWithName::getNameAsString)  // e.g., javono.lib.GPIO
+                                .filter(name -> name.startsWith("javono.lib"))
+                                .map(name -> name.substring(name.lastIndexOf('.') + 1))
+                                .collect(Collectors.toSet());
+                        allowedImportedClassNames.removeIf(name -> name.equals("lib"));
+
+
+                        if (wildcardImport) {
+                            File libFolder = new File("src/main/java/javono/lib");// adjust path as needed
+                            if (libFolder.exists() && libFolder.isDirectory()) {
+                                for (File file2 : Objects.requireNonNull(libFolder.listFiles())) {
+                                    if (file2.getName().endsWith(".java")) {
+                                        String className = file2.getName().replace(".java", "");
+                                        allowedImportedClassNames.add(className);
+                                    }
+                                }
+                            } else {
+                                try {
+                                    allowedImportedClassNames.addAll(listClassNamesFromLib());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+
+                        // 3. Validate method calls
+                        clazz.getMethods().forEach(method -> {
+                            method.findAll(MethodCallExpr.class).forEach(call -> {
+                                if (call.hasScope()) {
+                                    Optional<Expression> scope = call.getScope();
+
+                                    Expression scp = scope.orElse(null);
+                                    String variableName = scp.toString();
+
+                                    // Find the variable declaration matching this name
+                                    Optional<String> className = call.findAncestor(CompilationUnit.class)
+                                            .flatMap(cu2 -> cu2.findAll(VariableDeclarator.class).stream()
+                                                    .filter(vd -> vd.getNameAsString().equals(variableName))
+                                                    .map(vd -> vd.getType().asString()) // e.g., "GPIO"
+                                                    .findFirst()
+                                            );
+                                    if (className.isPresent() && allowedImportedClassNames.contains(className.get())) {
+                                        Expression sc = scope.orElse(null);
+                                        String scopeStr = sc.toString();
+                                        allowedImportedClassNames.add(scopeStr);
+                                    }
+
+
+                                    if (scope.isEmpty() || scope.get().isThisExpr()) {
+                                        // Unscoped or this → must be local
+                                        if (!localMethodNames.contains(call.getNameAsString())) {
+                                            LoggerFacade.getInstance().error("Call to undefined local method: " + call.getNameAsString());
+                                            System.exit(1);
+                                        }
+                                    } else {
+                                        String scopeText = scope.get().toString();
+                                        if (!allowedImportedClassNames.contains(scopeText)) {
+                                            LoggerFacade.getInstance().error("External method call not allowed: " + call);
+                                            System.exit(1);
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        //Ends: this is to restrict users to outside methods
+
+
                         boolean hasSetup = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoEmbeddedInit.class));
                         if (!hasSetup) {
                             System.err.println("[Javono] No @JavonoEmbeddedInit annotation found.");
