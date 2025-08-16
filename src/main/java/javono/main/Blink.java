@@ -26,11 +26,6 @@ public class Blink {
     }
 
     @JavonoEmbeddedUserMethod
-    private int test(int dk) {
-        return dk;
-    }
-
-    @JavonoEmbeddedUserMethod
     private void mymethod() {
     }
 
