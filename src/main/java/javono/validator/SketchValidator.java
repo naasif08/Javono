@@ -389,7 +389,7 @@ class SketchValidator {
                             detectCustomMethodRecursion(clazz, file);
 
                         }
-                        System.out.println("[Javono] @JavonoEmbeddedSketch class found Ok and class name is " + clazz.getName() + ".java");
+                        System.out.println("[Javono] @JavonoEmbeddedSketch class found and class name is " + clazz.getName() + ".java");
                     }
                 });
 

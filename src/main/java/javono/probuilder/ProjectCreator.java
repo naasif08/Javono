@@ -13,66 +13,80 @@ import java.nio.file.Paths;
 
 class ProjectCreator {
 
-    private static String PROJECT_DIR = "Null Project";
+    private String PROJECT_DIR = "Null Project";
+    private String setupMethod = """
+            void setup(){
+              Javono_serial_init();
+            }
+            """;
+    private String loopMethod = """
+            void loop(){
+              const char* line = Javono_serial_read();                
+              Javono_serial_write(line); 
+              Javono_serial_write("hello world"); 
+              Javono_serial_write("new world"); 
+              sleep(0.5);
+            }
+            """;
 
     public File createProject() throws IOException {
         File projectDir = DetectorFacade.getInstance().getProjectDir("ESP32Project");
-        ProjectCreator.PROJECT_DIR = projectDir.getAbsolutePath();
+        this.PROJECT_DIR = projectDir.getAbsolutePath();
         Path mainDir = projectDir.toPath().resolve("main");
         Files.createDirectories(mainDir);
         LoggerFacade.getInstance().info("Created project directory: " + projectDir.getAbsolutePath());
         if (OS.detect().isWindows()) {
-            writeFiles();
+            writeFilesWindows();
         } else {
-            writeFilesLinux();
+            writeFilesUnix();
         }
         return projectDir;
     }
 
-    private static void writeFiles() throws IOException {
-        writeTextFile(PROJECT_DIR + "\\CMakeLists.txt", cmakeListsTxtContent());
-        writeTextFile(PROJECT_DIR + "\\LICENSE", licenseContent());
-        writeTextFile(PROJECT_DIR + "\\README.md", readmeContent());
-        writeTextFile(PROJECT_DIR + "\\.clangd", clangdContent());
-        writeTextFile(PROJECT_DIR + "\\.clang-format", clangFormatContent());
-        writeTextFile(PROJECT_DIR + "\\.cproject", cprojectContent());
-        writeTextFile(PROJECT_DIR + "\\.project", projectContent());
-        writeTextFile(PROJECT_DIR + "\\.gitignore", gitignoreContent());
+    private void writeFilesWindows() throws IOException {
+        writeTextFile(this.PROJECT_DIR + "\\CMakeLists.txt", cmakeListsTxtContent());
+        writeTextFile(this.PROJECT_DIR + "\\LICENSE", licenseContent());
+        writeTextFile(this.PROJECT_DIR + "\\README.md", readmeContent());
+        writeTextFile(this.PROJECT_DIR + "\\.clangd", clangdContent());
+        writeTextFile(this.PROJECT_DIR + "\\.clang-format", clangFormatContent());
+        writeTextFile(this.PROJECT_DIR + "\\.cproject", cprojectContent());
+        writeTextFile(this.PROJECT_DIR + "\\.project", projectContent());
+        writeTextFile(this.PROJECT_DIR + "\\.gitignore", gitignoreContent());
 
-        writeTextFile(PROJECT_DIR + "\\main\\CMakeLists.txt", mainCMakeListsTxtContent());
-        writeTextFile(PROJECT_DIR + "\\main\\Kconfig.projbuild", kconfigProjbuildContent());
-        writeTextFile(PROJECT_DIR + "\\main\\Javono_serial.h", serialHeaderfile());
-        writeTextFile(PROJECT_DIR + "\\main\\Javono_serial.c", serialSourceFile());
-        writeTextFile(PROJECT_DIR + "\\main\\main.c", mainCContent());
-
-        LoggerFacade.getInstance().info("Created all project files.");
-    }
-
-    private static void writeFilesLinux() throws IOException {
-        writeTextFile(PROJECT_DIR + "//CMakeLists.txt", cmakeListsTxtContent());
-        writeTextFile(PROJECT_DIR + "//LICENSE", licenseContent());
-        writeTextFile(PROJECT_DIR + "//README.md", readmeContent());
-        writeTextFile(PROJECT_DIR + "//.clangd", clangdContent());
-        writeTextFile(PROJECT_DIR + "//.clang-format", clangFormatContent());
-        writeTextFile(PROJECT_DIR + "//.cproject", cprojectContent());
-        writeTextFile(PROJECT_DIR + "//.project", projectContent());
-        writeTextFile(PROJECT_DIR + "//.gitignore", gitignoreContent());
-
-        writeTextFile(PROJECT_DIR + "//main//CMakeLists.txt", mainCMakeListsTxtContent());
-        writeTextFile(PROJECT_DIR + "//main//Kconfig.projbuild", kconfigProjbuildContent());
-        writeTextFile(PROJECT_DIR + "//main//Javono_serial.h", serialHeaderfile());
-        writeTextFile(PROJECT_DIR + "//main//Javono_serial.c", serialSourceFile());
-        writeTextFile(PROJECT_DIR + "//main//main.c", mainCContent());
+        writeTextFile(this.PROJECT_DIR + "\\main\\CMakeLists.txt", mainCMakeListsTxtContent());
+        writeTextFile(this.PROJECT_DIR + "\\main\\Kconfig.projbuild", kconfigProjbuildContent());
+        writeTextFile(this.PROJECT_DIR + "\\main\\Javono_serial.h", serialHeaderfile());
+        writeTextFile(this.PROJECT_DIR + "\\main\\Javono_serial.c", serialSourceFile());
+        writeTextFile(this.PROJECT_DIR + "\\main\\main.c", mainCContent());
 
         LoggerFacade.getInstance().info("Created all project files.");
     }
 
-    private static void writeTextFile(String path, String content) throws IOException {
+    private void writeFilesUnix() throws IOException {
+        writeTextFile(this.PROJECT_DIR + "//CMakeLists.txt", cmakeListsTxtContent());
+        writeTextFile(this.PROJECT_DIR + "//LICENSE", licenseContent());
+        writeTextFile(this.PROJECT_DIR + "//README.md", readmeContent());
+        writeTextFile(this.PROJECT_DIR + "//.clangd", clangdContent());
+        writeTextFile(this.PROJECT_DIR + "//.clang-format", clangFormatContent());
+        writeTextFile(this.PROJECT_DIR + "//.cproject", cprojectContent());
+        writeTextFile(this.PROJECT_DIR + "//.project", projectContent());
+        writeTextFile(this.PROJECT_DIR + "//.gitignore", gitignoreContent());
+
+        writeTextFile(this.PROJECT_DIR + "//main//CMakeLists.txt", mainCMakeListsTxtContent());
+        writeTextFile(this.PROJECT_DIR + "//main//Kconfig.projbuild", kconfigProjbuildContent());
+        writeTextFile(this.PROJECT_DIR + "//main//Javono_serial.h", serialHeaderfile());
+        writeTextFile(this.PROJECT_DIR + "//main//Javono_serial.c", serialSourceFile());
+        writeTextFile(this.PROJECT_DIR + "//main//main.c", mainCContent());
+
+        LoggerFacade.getInstance().info("Created all project files.");
+    }
+
+    private void writeTextFile(String path, String content) throws IOException {
         Files.write(Paths.get(path), content.getBytes());
         LoggerFacade.getInstance().success("Created: " + path);
     }
 
-    private static String cmakeListsTxtContent() {
+    private String cmakeListsTxtContent() {
         return """
                 cmake_minimum_required(VERSION 3.16)
                 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
@@ -80,34 +94,34 @@ class ProjectCreator {
                 """;
     }
 
-    private static String licenseContent() {
+    private String licenseContent() {
         return "/* MIT License - Example */\n";
     }
 
-    private static String readmeContent() {
+    private String readmeContent() {
         return "# ESP32Project\nMinimal ESP-IDF project created by Java\n";
     }
 
-    private static String clangdContent() {
+    private String clangdContent() {
         return "CompileFlags:\n  Add: [-I${workspaceFolder}/main]\n";
     }
 
-    private static String clangFormatContent() {
+    private String clangFormatContent() {
         return """
                 BasedOnStyle: Google
                 IndentWidth: 4
                 """;
     }
 
-    private static String cprojectContent() {
+    private String cprojectContent() {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- Minimal .cproject file -->\n";
     }
 
-    private static String projectContent() {
+    private String projectContent() {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- Minimal .project file -->\n";
     }
 
-    private static String gitignoreContent() {
+    private String gitignoreContent() {
         return """
                 # Ignore build output folder
                 /build/
@@ -141,18 +155,18 @@ class ProjectCreator {
                 """;
     }
 
-    private static String mainCMakeListsTxtContent() {
+    private String mainCMakeListsTxtContent() {
         return """
                 idf_component_register(SRCS "main.c" Javono_serial.c
                                        INCLUDE_DIRS "")
                 """;
     }
 
-    private static String kconfigProjbuildContent() {
+    private String kconfigProjbuildContent() {
         return "# Minimal Kconfig.projbuild\n";
     }
 
-    private static String serialHeaderfile() {
+    private String serialHeaderfile() {
         return """
                  #ifndef Javono_SERIAL_H
                   #define Javono_SERIAL_H
@@ -179,7 +193,7 @@ class ProjectCreator {
                 """;
     }
 
-    private static String serialSourceFile() {
+    private String serialSourceFile() {
         return """
                 #include "Javono_serial.h"
                 #include "driver/uart.h"
@@ -294,28 +308,36 @@ class ProjectCreator {
                 """;
     }
 
-    private static String mainCContent() {
+    private String mainCContent() {
         return """
-                                #include "esp_log.h"
-                                #include "Javono_serial.h"
-                                #include <stdbool.h>
-                                #include <stdio.h>
-                                #include <string.h>
-                                #include <sys/unistd.h>
-                                #include <unistd.h>
+                #include "esp_log.h"
+                #include "Javono_serial.h"
+                #include <stdbool.h>
+                #include <stdio.h>
+                #include <string.h>
+                #include <sys/unistd.h>
+                #include <unistd.h>                              
                 
-                                void app_main(void) {
-                                  Javono_serial_init();
-                                  while (true) {                                      
-                                          const char* line = Javono_serial_read();                
-                                              Javono_serial_write(line); 
-                                              Javono_serial_write("hello world"); 
-                                              Javono_serial_write("new world"); 
-                                      sleep(0.5);
-                                  }
-                                }
+                void setup(void);
+                void loop(void);
+                
+                void app_main(void) {
+                  setup();
+                  while (true) {                                      
+                  loop();               
+                  }
+                }
+                """ + this.setupMethod + "\n" + """
+                """ + this.loopMethod + "\n" + """
                 
                 """;
     }
 
+    public String getSetupMethod() {
+        return setupMethod;
+    }
+
+    public void setSetupMethod(String setupMethod) {
+        this.setupMethod = setupMethod;
+    }
 }
