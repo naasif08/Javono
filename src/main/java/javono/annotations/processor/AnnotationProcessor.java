@@ -121,7 +121,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                 if (element.getKind() == ElementKind.CLASS) {
                     TypeElement sketchClazz = (TypeElement) element;
                     validateFields(sketchClazz);
-                    validateAllMethodSignatures(sketchClazz);
+                    validateMethodSignatures(sketchClazz);  // Mainly validating users custom methods
                     validateNoInnerClasses(sketchClazz);
                 }
             }
@@ -193,7 +193,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private void validateAllMethodSignatures(TypeElement sketchClass) {
+    private void validateMethodSignatures(TypeElement sketchClass) {
         for (Element enclosed : sketchClass.getEnclosedElements()) {
             if (enclosed.getKind() == ElementKind.METHOD) {
                 ExecutableElement method = (ExecutableElement) enclosed;
@@ -203,14 +203,14 @@ public class AnnotationProcessor extends AbstractProcessor {
 
                 // Validate return type
                 TypeMirror returnType = method.getReturnType();
-                if (!returnType.getKind().equals(TypeKind.VOID) && !isAllowedType(returnType)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid return type: " + returnType + ". Allowed types are int, float, boolean, char, String, and javono.lib.*", method);
+                if (!returnType.getKind().equals(TypeKind.VOID) && !isAllowedReturnType(returnType)) {
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid return type. Method name: " + method.getSimpleName() + " and return type: " + returnType + ". \n    Allowed return types are int, float, boolean, char and String.", method);
                 }
 
                 // Validate parameter types
                 for (VariableElement param : method.getParameters()) {
-                    if (!isAllowedType(param.asType())) {
-                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid parameter type: " + param.asType() + ". Allowed types are int, float, boolean, char, String, and javono.lib.*", param);
+                    if (!param.asType().getKind().equals(TypeKind.VOID) && !isAllowedParameterType(param.asType())) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid method parameter type. Method name: " + method.getSimpleName() + " and parameter type: " + param.asType() + ". \n    Allowed parameter types are int, float, boolean, char, String, and javono.lib.*", param);
                     }
                 }
             }
@@ -232,20 +232,21 @@ public class AnnotationProcessor extends AbstractProcessor {
                 boolean isOnlyAllowed = modifiers.stream().allMatch(mod -> allowed.contains(mod));
 
                 if (hasIllegalModifier || !isOnlyAllowed) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] You aren't allowed to use public, static, protected modifiers", field);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] You aren't allowed to use public, static, protected modifiers.", field);
                 }
 
 
                 if (!isAllowedFieldType(fieldType)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Field '" + field.getSimpleName() + "' has disallowed type: " + fieldType.toString() + "\n" + "Please try to use int, float, boolean, char, String, and javono.lib.*", field);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Field '" + field.getSimpleName() + "' has disallowed type: " + fieldType.toString() + "\n" + "    Please try to use int, float, boolean, char, String, and javono.lib.*", field);
                 }
             }
         }
     }
 
     private boolean isAllowedFieldType(TypeMirror type) {
+
         // Allow primitive types
-        if (type.getKind().isPrimitive()) {
+        if (type.getKind() == TypeKind.INT || type.getKind() == TypeKind.FLOAT || type.getKind() == TypeKind.BOOLEAN || type.getKind() == TypeKind.CHAR) {
             return true;
         }
 
@@ -264,7 +265,24 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
 
-    private boolean isAllowedType(TypeMirror type) {
+    private boolean isAllowedReturnType(TypeMirror type) {
+        TypeKind kind = type.getKind();
+
+        // Allow primitives
+        if (kind == TypeKind.INT || kind == TypeKind.FLOAT || kind == TypeKind.BOOLEAN || kind == TypeKind.CHAR) {
+            return true;
+        }
+
+        // Check reference types (like String, or anything in javono.lib.*)
+        String typeStr = type.toString();
+
+        if (typeStr.equals("java.lang.String")) return true;
+
+        return false;
+    }
+
+
+    private boolean isAllowedParameterType(TypeMirror type) {
         TypeKind kind = type.getKind();
 
         // Allow primitives
@@ -280,7 +298,6 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         return false;
     }
-
 
     public boolean isLoopFound() {
         return loopFound;

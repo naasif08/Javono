@@ -7,13 +7,15 @@ import javono.annotations.JavonoEmbeddedSketch;
 import javono.annotations.JavonoEmbeddedUserMethod;
 import javono.lib.*;
 
+import java.util.List;
+
 @JavonoEmbeddedSketch
 public class Blink {
 
     private GPIO gpio;
 
     @JavonoEmbeddedInit
-    private void setup(){
+    private void setup() {
 
 
     }
@@ -24,7 +26,13 @@ public class Blink {
     }
 
     @JavonoEmbeddedUserMethod
-    private void test(){}
+    private int test(int dk) {
+        return dk;
+    }
+
+    @JavonoEmbeddedUserMethod
+    private void mymethod() {
+    }
 
 
 }
