@@ -135,7 +135,7 @@ public class AnnotationProcessor extends AbstractProcessor {
     private void validateNoInnerClasses(TypeElement sketchClass) {
         for (Element enclosed : sketchClass.getEnclosedElements()) {
             if (enclosed.getKind() == ElementKind.CLASS || enclosed.getKind() == ElementKind.INTERFACE) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Inner or nested classes are not allowed inside a sketch class.", enclosed);
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Inner or nested classes or anything this type are not allowed inside a @JavonoEmbeddedSketch class.", enclosed);
             }
         }
     }
@@ -201,16 +201,17 @@ public class AnnotationProcessor extends AbstractProcessor {
                 // Skip constructors
                 if (method.getSimpleName().toString().equals("<init>")) continue;
 
+
                 // Validate return type
                 TypeMirror returnType = method.getReturnType();
                 if (!returnType.getKind().equals(TypeKind.VOID) && !isAllowedReturnType(returnType)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid return type. Method name: " + method.getSimpleName() + " and return type: " + returnType + ". \n    Allowed return types are int, float, boolean, char and String.", method);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid return type. Method name: " + method.getSimpleName() + " and return type: " + returnType + ". \n    Allowed return types are int, float, boolean, char and JavonoString.", method);
                 }
 
                 // Validate parameter types
                 for (VariableElement param : method.getParameters()) {
                     if (!param.asType().getKind().equals(TypeKind.VOID) && !isAllowedParameterType(param.asType())) {
-                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid method parameter type. Method name: " + method.getSimpleName() + " and parameter type: " + param.asType() + ". \n    Allowed parameter types are int, float, boolean, char, String, and javono.lib.*", param);
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid method parameter type. Method name: " + method.getSimpleName() + " and parameter type: " + param.asType() + ". \n    Allowed parameter types are int, float, boolean, char, JavonoString, and javono.lib.*", param);
                     }
                 }
             }
@@ -237,7 +238,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
 
                 if (!isAllowedFieldType(fieldType)) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Field '" + field.getSimpleName() + "' has disallowed type: " + fieldType.toString() + "\n" + "    Please try to use int, float, boolean, char, String, and javono.lib.*", field);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] '" + field.getSimpleName() + "' is not allowed type field : " + fieldType.toString() + "\n" + "    Please try to use int, float, boolean, char and javono.lib.*", field);
                 }
             }
         }
@@ -256,11 +257,6 @@ public class AnnotationProcessor extends AbstractProcessor {
             return true;
         }
 
-        // Allow java.lang.String (if you want)
-        if (typeName.equals("java.lang.String")) {
-            return true;
-        }
-
         return false;
     }
 
@@ -275,8 +271,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         // Check reference types (like String, or anything in javono.lib.*)
         String typeStr = type.toString();
-
-        if (typeStr.equals("java.lang.String")) return true;
+        if (typeStr.startsWith("javono.lib.JavonoString")) return true;
 
         return false;
     }
@@ -292,8 +287,6 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         // Check reference types (like String, or anything in javono.lib.*)
         String typeStr = type.toString();
-
-        if (typeStr.equals("java.lang.String")) return true;
         if (typeStr.startsWith("javono.lib.")) return true;
 
         return false;

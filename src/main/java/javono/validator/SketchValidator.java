@@ -288,6 +288,22 @@ class SketchValidator {
                         });
                         //Ends: this is to restrict users to outside methods
 
+                        clazz.getMethods().forEach(method -> {
+                            method.getBody().ifPresent(body -> {
+                                body.findAll(VariableDeclarator.class).forEach(var -> {
+                                    String typeName = var.getType().asString();
+                                    if (!typeName.equals("int") && !typeName.equals("float") && !typeName.equals("char") && !typeName.equals("JavonoString") && !isAllowedJavonoType(typeName)) {
+                                        LoggerFacade.getInstance().error(
+                                                "Invalid local variable type detected!\n" +
+                                                        "  Found type: " + typeName + "\n" +
+                                                        "Allowed types are: int, float, char, JavonoString, or classes from javono.lib"
+                                        );
+                                        System.exit(1);
+                                    }
+                                });
+                            });
+                        });
+
 
                         boolean hasSetup = clazz.getMethods().stream().anyMatch(method -> method.isAnnotationPresent(JavonoEmbeddedInit.class));
                         if (!hasSetup) {
@@ -401,4 +417,41 @@ class SketchValidator {
             System.err.println("[Javono] Failed to read " + file + ": " + e.getMessage());
         }
     }
+
+    private static boolean isAllowedJavonoType(String typeName) {
+        try {
+            Set<String> libClasses = new HashSet<>();
+            String path = "javono/lib";
+
+            // Try to read from JAR or classpath
+            URL url = Thread.currentThread().getContextClassLoader().getResource(path);
+            if (url != null) {
+                if ("jar".equals(url.getProtocol())) {
+                    String jarPath = URLDecoder.decode(url.getPath().substring(5, url.getPath().indexOf("!")), "UTF-8");
+                    try (JarFile jarFile = new JarFile(jarPath)) {
+                        Enumeration<JarEntry> entries = jarFile.entries();
+                        while (entries.hasMoreElements()) {
+                            JarEntry entry = entries.nextElement();
+                            if (entry.getName().startsWith(path) && entry.getName().endsWith(".class")) {
+                                libClasses.add(entry.getName().substring(entry.getName().lastIndexOf('/') + 1, entry.getName().length() - 6));
+                            }
+                        }
+                    }
+                } else if ("file".equals(url.getProtocol())) {
+                    File folder = new File(url.toURI());
+                    for (File f : Objects.requireNonNull(folder.listFiles())) {
+                        if (f.getName().endsWith(".class")) {
+                            libClasses.add(f.getName().replace(".class", ""));
+                        }
+                    }
+                }
+            }
+
+            return libClasses.contains(typeName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
