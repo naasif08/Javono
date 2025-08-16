@@ -5,8 +5,6 @@ import javono.builder.impl.JavonoLocalBuilder;
 
 public class JavonoMain {
 
-    public static void Test(){}
-
     public static void main(String arg[]) {
         new JavonoLocalBuilder()
                 .build()

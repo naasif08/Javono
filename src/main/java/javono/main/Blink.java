@@ -13,16 +13,14 @@ public class Blink {
     private GPIO gpio;
 
     @JavonoEmbeddedInit
-    private void setup() throws InterruptedException {
+    private void setup(){
 
-            Thread.sleep(100);
 
     }
 
     @JavonoEmbeddedLoop
     private void loop() {
         GPIO.Test2();
-        System.out.println();
     }
 
     @JavonoEmbeddedUserMethod
