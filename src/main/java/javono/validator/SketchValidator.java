@@ -33,6 +33,8 @@ class SketchValidator {
 
     private static final SketchValidator INSTANCE = new SketchValidator();
     private final Path userProjectSrcDir = detectUniversalJavaSourceDir();
+    private int classCount = 0;
+    private String className = "Class not found.";
 
     // Create a shared parser instance configured for Java 21
     private static final JavaParser parser;
@@ -142,6 +144,7 @@ class SketchValidator {
             System.err.println("[Javono] No class annotated with @Sketch found.");
             System.exit(1);
         }
+        LoggerFacade.getInstance().info("@JavonoEmbeddedSketch class found and class name is " + className + ".java");
     }
 
     public static List<String> listClassNamesFromLib() throws IOException {
@@ -184,7 +187,7 @@ class SketchValidator {
     }
 
 
-    private static void validateFile(Path file, AtomicBoolean sketchFound) {
+    private void validateFile(Path file, AtomicBoolean sketchFound) {
         try {
             // Use the configured parser here instead of StaticJavaParser
             ParseResult<CompilationUnit> result = parser.parse(file);
@@ -212,20 +215,14 @@ class SketchValidator {
 
                         //Starts: this is to restrict users to outside methods
                         // 1. Collect all method names declared in this class
-                        Set<String> localMethodNames = clazz.getMethods().stream()
-                                .map(m -> m.getNameAsString())
-                                .collect(Collectors.toSet());
+                        Set<String> localMethodNames = clazz.getMethods().stream().map(m -> m.getNameAsString()).collect(Collectors.toSet());
 
                         // 2. Collect all javono.lib imports
-                        boolean wildcardImport = cu.getImports().stream()
-                                .anyMatch(imp -> imp.getNameAsString().equals("javono.lib") && imp.isAsterisk());
+                        boolean wildcardImport = cu.getImports().stream().anyMatch(imp -> imp.getNameAsString().equals("javono.lib") && imp.isAsterisk());
 
 
-                        Set<String> allowedImportedClassNames = cu.getImports().stream()
-                                .map(NodeWithName::getNameAsString)  // e.g., javono.lib.GPIO
-                                .filter(name -> name.startsWith("javono.lib"))
-                                .map(name -> name.substring(name.lastIndexOf('.') + 1))
-                                .collect(Collectors.toSet());
+                        Set<String> allowedImportedClassNames = cu.getImports().stream().map(NodeWithName::getNameAsString)  // e.g., javono.lib.GPIO
+                                .filter(name -> name.startsWith("javono.lib")).map(name -> name.substring(name.lastIndexOf('.') + 1)).collect(Collectors.toSet());
                         allowedImportedClassNames.removeIf(name -> name.equals("lib"));
 
 
@@ -257,12 +254,8 @@ class SketchValidator {
                                     String variableName = scp.toString();
 
                                     // Find the variable declaration matching this name
-                                    Optional<String> className = call.findAncestor(CompilationUnit.class)
-                                            .flatMap(cu2 -> cu2.findAll(VariableDeclarator.class).stream()
-                                                    .filter(vd -> vd.getNameAsString().equals(variableName))
-                                                    .map(vd -> vd.getType().asString()) // e.g., "GPIO"
-                                                    .findFirst()
-                                            );
+                                    Optional<String> className = call.findAncestor(CompilationUnit.class).flatMap(cu2 -> cu2.findAll(VariableDeclarator.class).stream().filter(vd -> vd.getNameAsString().equals(variableName)).map(vd -> vd.getType().asString()) // e.g., "GPIO"
+                                            .findFirst());
                                     if (className.isPresent() && allowedImportedClassNames.contains(className.get())) {
                                         Expression sc = scope.orElse(null);
                                         String scopeStr = sc.toString();
@@ -293,11 +286,7 @@ class SketchValidator {
                                 body.findAll(VariableDeclarator.class).forEach(var -> {
                                     String typeName = var.getType().asString();
                                     if (!typeName.equals("int") && !typeName.equals("float") && !typeName.equals("char") && !typeName.equals("JavonoString") && !isAllowedJavonoType(typeName)) {
-                                        LoggerFacade.getInstance().error(
-                                                "Invalid local variable type detected!\n" +
-                                                        "  Found type: " + typeName + "\n" +
-                                                        "Allowed types are: int, float, char, JavonoString, or classes from javono.lib"
-                                        );
+                                        LoggerFacade.getInstance().error("Invalid local variable type detected!\n" + "  Found type: " + typeName + "\n" + "Allowed types are: int, float, char, JavonoString, or classes from javono.lib");
                                         System.exit(1);
                                     }
                                 });
@@ -405,7 +394,15 @@ class SketchValidator {
                             detectCustomMethodRecursion(clazz, file);
 
                         }
-                        System.out.println("[Javono] @JavonoEmbeddedSketch class found and class name is " + clazz.getName() + ".java");
+
+                        classCount = classCount + 1;
+                        if (classCount > 1) {
+                            LoggerFacade.getInstance().error("More than one class found having @JavonoEmbeddedSketch annotation and class name is " + clazz.getNameAsString() + ".java" + " and please use only one.");
+                            System.exit(1);
+                        } else if (classCount == 1) {
+                            this.className = clazz.getNameAsString();
+                        }
+
                     }
                 });
 
