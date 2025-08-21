@@ -174,23 +174,6 @@ class SketchValidator {
 
             LoggerFacade.getInstance().info("Annotation processor detected.");
 
-            // Attempt to delete the file if it exists on filesystem
-            try {
-                File markerFile = new File(markerUrl.toURI());
-                if (markerFile.exists()) {
-                    boolean deleted = markerFile.delete();
-                    if (!deleted) {
-                        LoggerFacade.getInstance().warn(
-                                "Failed to delete processor marker. " +
-                                        "This may happen if running from a JAR or protected directory."
-                        );
-                    }
-                }
-            } catch (Exception e) {
-                // Non-fatal; could be running from inside a JAR
-                LoggerFacade.getInstance().warn("Could not delete processor marker: " + e.getMessage());
-            }
-
             return true;
 
         } catch (Exception e) {
