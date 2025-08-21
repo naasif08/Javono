@@ -151,7 +151,51 @@ class SketchValidator {
             System.err.println("[Javono] No class annotated with @Sketch found.");
             System.exit(1);
         }
-        LoggerFacade.getInstance().info("@JavonoEmbeddedSketch class found and class name is " + className + ".java");
+        if (checkAndDeleteProcessorMarker()) {
+            LoggerFacade.getInstance().info("@JavonoEmbeddedSketch class found and class name is " + className + ".java");
+        } else {
+            System.exit(1);
+        }
+    }
+
+    public static boolean checkAndDeleteProcessorMarker() {
+        try {
+            // Try to locate the marker file in the classpath
+            URL markerUrl = ClassLoader.getSystemResource("javono-processor.marker");
+            if (markerUrl == null) {
+                LoggerFacade.getInstance().error(
+                        "Annotation processor not detected! "
+                                + "\nTo use Javono correctly, please enable annotation processing in your IDE "
+                                + "\n(For example, in IntelliJ: Settings → Build, Execution, Deployment → Compiler → Annotation Processors → Enable) "
+                                + "\nor in your build tool (Maven/Gradle)."
+                );
+                return false;
+            }
+
+            LoggerFacade.getInstance().info("Annotation processor detected.");
+
+            // Attempt to delete the file if it exists on filesystem
+            try {
+                File markerFile = new File(markerUrl.toURI());
+                if (markerFile.exists()) {
+                    boolean deleted = markerFile.delete();
+                    if (!deleted) {
+                        LoggerFacade.getInstance().warn(
+                                "Failed to delete processor marker. " +
+                                        "This may happen if running from a JAR or protected directory."
+                        );
+                    }
+                }
+            } catch (Exception e) {
+                // Non-fatal; could be running from inside a JAR
+                LoggerFacade.getInstance().warn("Could not delete processor marker: " + e.getMessage());
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to check annotation processor status.", e);
+        }
     }
 
     public static List<String> listClassNamesFromLib() throws IOException {

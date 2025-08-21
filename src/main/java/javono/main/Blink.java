@@ -30,11 +30,6 @@ public class Blink {
 
     }
 
-    @JavonoEmbeddedUserMethod
-    private int mymethod() {
-
-        return 0;
-    }
 
 
 }

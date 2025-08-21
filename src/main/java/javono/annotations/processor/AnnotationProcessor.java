@@ -8,6 +8,9 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
+import java.io.Writer;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -30,8 +33,11 @@ public class AnnotationProcessor extends AbstractProcessor {
             if (allSketches.size() != 1) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] Exactly one class must be annotated with @JavonoEmbeddedSketch, found: " + allSketches.size());
             }
+            createProcessorMarker();
             return false;
         }
+
+
 
         // Accumulate sketches found this round
         Set<? extends Element> sketchesThisRound = roundEnv.getElementsAnnotatedWith(JavonoEmbeddedSketch.class);
@@ -215,6 +221,20 @@ public class AnnotationProcessor extends AbstractProcessor {
                     }
                 }
             }
+        }
+    }
+
+    private void createProcessorMarker() {
+        try {
+            // Create a simple marker file in CLASS_OUTPUT (target/classes)
+            FileObject marker = processingEnv.getFiler()
+                    .createResource(StandardLocation.CLASS_OUTPUT, "", "javono-processor.marker");
+            try (Writer writer = marker.openWriter()) {
+                writer.write("Processor ran successfully at " + System.currentTimeMillis());
+            }
+        } catch (Exception e) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                    "[Javono] Failed to create processor marker: " + e.getMessage());
         }
     }
 
