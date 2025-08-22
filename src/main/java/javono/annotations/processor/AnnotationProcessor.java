@@ -179,7 +179,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             }
 
             if (method.getModifiers().contains(Modifier.STATIC)) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] @" + annotationName + " methods must not be static.", method);
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "[Javono] " + annotationName + " methods must not be static.", method);
             }
         }
     }

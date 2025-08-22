@@ -80,21 +80,21 @@ class PythonEnvChecker {
         boolean pipOK = isEnsurePipAvailable();
 
         if (venvOK && pipOK) {
-            System.out.println("[Javono] Python venv and ensurepip are available.");
+            LoggerFacade.getInstance().info("Python venv and ensurepip are available.");
             return;
         }
 
-        System.out.println("[Javono] ❌ Some required Python modules are missing:");
+        LoggerFacade.getInstance().error("❌ Some required Python modules are missing:");
         if (!venvOK) System.out.println("  - venv");
         if (!pipOK) System.out.println("  - ensurepip");
 
         if (!isDebianBasedOS()) {
-            System.out.println("[Javono] Unsupported OS detected. Please install missing modules manually.");
+            LoggerFacade.getInstance().error("[Javono] Unsupported OS detected. Please install missing modules manually.");
             return;
         }
 
         System.out.println("\n[Javono] You can fix this by running:");
-        System.out.println("sudo apt install --reinstall python3-venv python3-ensurepip\n");
+        LoggerFacade.getInstance().info("sudo apt install --reinstall python3-venv python3-ensurepip\n");
 
         System.out.print("[Javono] Would you like Javono to open a terminal to install these now? (y/N): ");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {

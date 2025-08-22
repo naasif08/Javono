@@ -22,7 +22,7 @@ class Esp32Flasher {
         if (exitCode != 0) {
             throw new RuntimeException("Flashing failed with exit code: " + exitCode);
         } else {
-            System.out.println("Flashing finished successfully.");
+            LoggerFacade.getInstance().success("Flashing finished successfully.");
         }
     }
 

@@ -1,14 +1,18 @@
 package javono.builder.impl;
 
 import javono.builder.JavonoBuilder;
+import javono.compilehelper.ColoredDiagnosticListener;
 import javono.detector.DetectorFacade;
 import javono.flasher.FlasherFacade;
 import javono.logger.LoggerFacade;
 import javono.probuilder.ProjectBuilderFacade;
 import javono.validator.ValidatorFacade;
 
+import javax.tools.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JavonoLocalBuilder implements JavonoBuilder {
 
@@ -16,6 +20,51 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder build() {
+        checkInsideProjectRoot();
+        // ----------------------------
+        // CLI compilation with annotation processor
+        // ----------------------------
+        File srcDir = new File(System.getProperty("user.dir"), "src");
+        File outDir = new File(System.getProperty("user.dir"), ".javono/build/classes");
+        if (!outDir.exists()) outDir.mkdirs();
+
+        // Collect Java source files
+        List<File> sourceFiles = collectJavaFiles(srcDir); // implement this utility method
+
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+
+        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(sourceFiles);
+
+        List<String> options = new ArrayList<>();
+        options.add("-d");
+        options.add(outDir.getAbsolutePath());
+        options.add("-cp");
+        options.add(System.getProperty("java.class.path"));
+        options.add("-processor");
+        options.add("javono.annotations.processor.AnnotationProcessor"); // full processor class name
+
+        DiagnosticListener<JavaFileObject> listener = new ColoredDiagnosticListener();
+
+        JavaCompiler.CompilationTask task = compiler.getTask(
+                null,
+                fileManager,
+                listener,
+                options,
+                null,
+                compilationUnits
+        );
+
+        boolean success = task.call();
+        try {
+            fileManager.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (!success) {
+            throw new RuntimeException("Build failed due to annotation validation errors.");
+        }
 
         ValidatorFacade.getInstance().validateProject();
 
@@ -29,7 +78,11 @@ public class JavonoLocalBuilder implements JavonoBuilder {
         }
 
         try {
-            ProjectBuilderFacade.getInstance().writeBuildScripts(this.projectDir, DetectorFacade.getInstance().detectEsp32Port());
+            String port = DetectorFacade.getInstance().detectEsp32Port();
+            if (port == null) {
+                throw new IllegalStateException("ESP32 port could not be detected. Please connect your device.");
+            }
+            ProjectBuilderFacade.getInstance().writeBuildScripts(this.projectDir, port);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -99,5 +152,57 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
         throw new IllegalStateException("Cannot detect Javono ESP32 project folder. Run `javono build` first!");
     }
+
+    private List<File> collectJavaFiles(File dir) {
+        List<File> javaFiles = new ArrayList<>();
+        collectJavaFilesRecursive(dir, javaFiles);
+        return javaFiles;
+    }
+
+    private void collectJavaFilesRecursive(File dir, List<File> javaFiles) {
+        if (dir == null || !dir.exists()) return;
+
+        File[] files = dir.listFiles();
+        if (files == null) return;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                collectJavaFilesRecursive(file, javaFiles);
+            } else if (file.getName().endsWith(".java")) {
+                javaFiles.add(file);
+            }
+        }
+    }
+
+    private void checkInsideProjectRoot() {
+        File dir = new File(System.getProperty("user.dir"));
+        boolean validRoot = false;
+
+        while (dir != null) {
+            File srcDir = new File(dir, "src");
+            File pomFile = new File(dir, "pom.xml");
+            File gradleFile = new File(dir, "build.gradle");
+            File gradleKtsFile = new File(dir, "build.gradle.kts");
+            File javonoDir = new File(dir, ".javono");
+
+            if ((srcDir.exists() && srcDir.isDirectory()) ||
+                    pomFile.exists() ||
+                    gradleFile.exists() ||
+                    gradleKtsFile.exists() ||
+                    (javonoDir.exists() && javonoDir.isDirectory())) {
+                validRoot = true;
+                break;
+            }
+            dir = dir.getParentFile();
+        }
+
+        if (!validRoot) {
+            throw new IllegalStateException(
+                    "Javono build must be run from inside the project root or its subfolders. " +
+                            "Cannot find 'src', pom.xml, build.gradle, or .javono folder in current or parent directories."
+            );
+        }
+    }
+
 
 }

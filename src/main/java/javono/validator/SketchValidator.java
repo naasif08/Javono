@@ -151,35 +151,28 @@ class SketchValidator {
             LoggerFacade.getInstance().error("No class annotated with @JavonoEmbeddedSketch found.");
             System.exit(1);
         }
-        if (checkAndDeleteProcessorMarker()) {
+        if (checkAndDeleteProcessorMarker(this.userProjectSrcDir.toFile())) {
             LoggerFacade.getInstance().info("@JavonoEmbeddedSketch class found and class name is " + className + ".java");
         } else {
             System.exit(1);
         }
     }
 
-    public static boolean checkAndDeleteProcessorMarker() {
+    public static boolean checkAndDeleteProcessorMarker(File projectDir) {
         try {
-            // Try to locate the marker file in the classpath
-            URL markerUrl = ClassLoader.getSystemResource("javono-processor.marker");
-            if (markerUrl == null) {
-                LoggerFacade.getInstance().error(
-                        "Annotation processor not detected! "
-                                + "\nTo use Javono correctly, please enable annotation processing in your IDE "
-                                + "\n(For example, in IntelliJ: Settings → Build, Execution, Deployment → Compiler → Annotation Processors → Enable) "
-                                + "\nor in your build tool (Maven/Gradle)."
-                );
+            File markerFile = new File(System.getProperty("user.dir"), ".javono/build/classes/javono-processor.marker");
+            if (!markerFile.exists()) {
+                LoggerFacade.getInstance().error("Annotation processor marker not found!");
                 return false;
             }
-
             LoggerFacade.getInstance().info("Annotation processor detected.");
-
             return true;
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to check annotation processor status.", e);
         }
     }
+
 
     public static List<String> listClassNamesFromLib() throws IOException {
         List<String> classNames = new ArrayList<>();

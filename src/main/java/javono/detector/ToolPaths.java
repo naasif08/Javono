@@ -184,9 +184,10 @@ final class ToolPaths {
 
     private static void check(String name, String value) {
         if (value == null || value.trim().isEmpty() || value.equals("null")) {
-            System.err.println("❌ Missing required path: javono." + name);
-            System.err.println("→ Fix it in .javono/javono.properties or set it manually");
-            if (name.equals("serialPort")) System.err.println("→ or you might not have connected ESP32 to your PC.");
+            LoggerFacade.getInstance().error("❌ Missing required path: javono." + name);
+            LoggerFacade.getInstance().error("→ Fix it in .javono/javono.properties or set it manually");
+            if (name.equals("serialPort"))
+                LoggerFacade.getInstance().error("→ or you might not have connected ESP32 to your PC.");
             System.exit(1);
         }
     }
