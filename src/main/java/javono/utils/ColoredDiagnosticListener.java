@@ -1,4 +1,4 @@
-package javono.compilehelper;
+package javono.utils;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;

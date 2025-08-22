@@ -1,7 +1,7 @@
 package javono.builder.impl;
 
 import javono.builder.JavonoBuilder;
-import javono.compilehelper.ColoredDiagnosticListener;
+import javono.utils.ColoredDiagnosticListener;
 import javono.detector.DetectorFacade;
 import javono.flasher.FlasherFacade;
 import javono.logger.LoggerFacade;
