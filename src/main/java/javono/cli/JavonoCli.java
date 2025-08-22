@@ -4,9 +4,12 @@ import javono.bootstrap.JavonoBootstrap;
 import javono.builder.JavonoBuilder;
 import javono.builder.impl.JavonoLocalBuilder;
 import javono.builder.impl.RemoteBuilder;
+import javono.logger.LoggerFacade;
 
 
 public class JavonoCli {
+
+    public static final String JAVONO_VERSION = "1.0.0";
 
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -43,6 +46,11 @@ public class JavonoCli {
                 builder.clean();
                 break;
 
+            case "version":
+            case "--version":
+                LoggerFacade.getInstance().info("Javono CLI version: " + JAVONO_VERSION);
+                break;
+
             case "help":
             default:
                 printHelp();
@@ -51,11 +59,13 @@ public class JavonoCli {
     }
 
     private static void printHelp() {
-        System.out.println("Javono CLI - Commands:");
-        System.out.println("     init              Set up the environment");
-        System.out.println("     build [--remote]  Build the Java sketch (local by default)");
-        System.out.println("     flash             Flash firmware to the device");
-        System.out.println("     clean             Clean build artifacts");
-        System.out.println("     help              Show this help message");
+        LoggerFacade.getInstance().info("Javono CLI - Commands:");
+        LoggerFacade.getInstance().info("     init              Set up the environment");
+        LoggerFacade.getInstance().info("     build [--remote]  Build the Java sketch (local by default)");
+        LoggerFacade.getInstance().info("     flash             Flash firmware to the device");
+        LoggerFacade.getInstance().info("     clean             Clean build artifacts");
+        LoggerFacade.getInstance().info("    --version          Shows current version of Javono");
+        LoggerFacade.getInstance().info("     help              Show this help message");
+
     }
 }

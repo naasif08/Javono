@@ -55,7 +55,7 @@ class BatchBuilder {
                 REM Move to project directory
                 cd /d "%s"
                 
-                echo Building project...
+                echo Preparing project to flash...
                 call "%%PYTHON_EXE_PATH%%" "%%IDF_PATH%%\\tools\\idf.py" build
                 if errorlevel 1 (
                     echo ❌ Build failed! Exiting...
@@ -97,7 +97,7 @@ class BatchBuilder {
                 source "$IDF_PATH/export.sh"
                 
                 # === Build the project ===
-                echo "Building the project..."
+                echo "Preparing project to flash..."
                 idf.py build
                 if [ $? -ne 0 ]; then
                     echo "❌ Build failed!"

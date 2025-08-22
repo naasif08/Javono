@@ -148,7 +148,7 @@ class SketchValidator {
         }
 
         if (!sketchFound.get()) {
-            System.err.println("[Javono] No class annotated with @Sketch found.");
+            LoggerFacade.getInstance().error("No class annotated with @JavonoEmbeddedSketch found.");
             System.exit(1);
         }
         if (checkAndDeleteProcessorMarker()) {
