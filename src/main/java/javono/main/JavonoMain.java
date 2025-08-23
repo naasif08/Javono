@@ -8,9 +8,8 @@ public class JavonoMain {
 
     public static void main(String arg[]) {
 
-       JavonoBootstrap.installCli();
-
-       //     new JavonoLocalBuilder().build();
+        System.out.println("Running");
+         new JavonoLocalBuilder().build();
 
     }
 }
