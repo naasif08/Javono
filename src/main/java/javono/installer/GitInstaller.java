@@ -60,7 +60,7 @@ class GitInstaller {
         LoggerFacade.getInstance().success("Git installation verified.");
     }
 
-    private static boolean isGitOnPath() {
+    private boolean isGitOnPath() {
         try {
             ProcessBuilder pb = new ProcessBuilder("git", "--version");
             pb.redirectErrorStream(true);
@@ -78,7 +78,7 @@ class GitInstaller {
         }
     }
 
-    private static void installPortableGitWindows() throws IOException, InterruptedException {
+    private void installPortableGitWindows() throws IOException, InterruptedException {
         Path gitExePath = getGitExecutablePath();
         Path downloadFile = espIdfPath.resolve(getDownloadFilename());
 
@@ -114,7 +114,7 @@ class GitInstaller {
         LoggerFacade.getInstance().success("Portable Git installed at: " + gitExePath);
     }
 
-    private static Path getEspIdfPath() {
+    private Path getEspIdfPath() {
         String idfPathStr = DetectorFacade.getInstance().detectIdfPath();
         if (idfPathStr == null) {
             throw new RuntimeException("ESP-IDF path not found! Please ensure ESP-IDF is installed and configured.");
@@ -122,7 +122,7 @@ class GitInstaller {
         return Path.of(idfPathStr);
     }
 
-    private static Path getGitExecutablePath() {
+    private Path getGitExecutablePath() {
         OS os = OS.detect();
         if (os == OS.WINDOWS) {
             return espIdfPath.resolve("cmd").resolve("git.exe");
@@ -132,17 +132,17 @@ class GitInstaller {
         }
     }
 
-    private static String getDownloadFilename() {
+    private String getDownloadFilename() {
         OS os = OS.detect();
         return os == OS.WINDOWS ? "PortableGit-2.42.0-64-bit.7z.exe" : null;
     }
 
-    private static String getDownloadUrl() {
+    private String getDownloadUrl() {
         OS os = OS.detect();
         return os == OS.WINDOWS ? "https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.1/PortableGit-2.42.0-64-bit.7z.exe" : null;
     }
 
-    private static void extract7zExe(Path exePath, Path outputDir) throws IOException, InterruptedException {
+    private void extract7zExe(Path exePath, Path outputDir) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(exePath.toAbsolutePath().toString(), "-y", "-o" + outputDir.toAbsolutePath().toString());
         pb.inheritIO();
         Process process = pb.start();
@@ -152,7 +152,7 @@ class GitInstaller {
         }
     }
 
-    private static void deleteRecursively(Path path) throws IOException {
+    private void deleteRecursively(Path path) throws IOException {
         if (!Files.exists(path)) return;
         if (Files.isDirectory(path)) {
             try (DirectoryStream<Path> entries = Files.newDirectoryStream(path)) {
