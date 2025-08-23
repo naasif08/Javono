@@ -11,10 +11,10 @@ import javono.utils.UtilsFacade;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
 
 public class JavonoBootstrap {
@@ -100,7 +100,7 @@ public class JavonoBootstrap {
             Files.createDirectories(binDir);
             LoggerFacade.getInstance().info("Installing Javono CLI...");
 
-            // Download Javono jar
+            // Download Javono.jar
             String jarUrl = "https://github.com/naasif08/JavonoProject/releases/download/Javono-CLI-v1.0/Javono.jar";
             Path jarPath = binDir.resolve("javono.jar");
             try (InputStream in = new java.net.URL(jarUrl).openStream()) {
@@ -108,23 +108,38 @@ public class JavonoBootstrap {
             }
 
             if (isWindows) {
-                // Only batch launcher for Windows (works in CMD & PowerShell)
+                // CMD launcher
                 Path batPath = binDir.resolve("javono.bat");
                 String batContent = "@echo off\njava -cp \"%~dp0\\javono.jar\" javono.cli.JavonoCli %*";
                 Files.write(batPath, batContent.getBytes(StandardCharsets.UTF_8),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-                // Attempt to update PATH
-                try {
-                    new ProcessBuilder("cmd", "/c", "setx PATH \"%PATH%;" + binDir.toString() + "\"")
+                // PowerShell launcher
+                Path ps1Path = binDir.resolve("javono.ps1");
+                String ps1Content = "java -cp \"$PSScriptRoot\\javono.jar\" javono.cli.JavonoCli @args";
+                Files.write(ps1Path, ps1Content.getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                // Update user PATH using setx (avoids duplicates)
+                String currentPath = System.getenv("PATH");
+                String binPathStr = binDir.toString();
+                if (currentPath == null || !Arrays.asList(currentPath.split(";")).stream()
+                        .anyMatch(p -> p.equalsIgnoreCase(binPathStr))) {
+
+                    // Build a unique PATH
+                    Set<String> pathEntries = new LinkedHashSet<>(Arrays.asList(currentPath != null ? currentPath.split(";") : new String[0]));
+                    pathEntries.removeIf(p -> p.equalsIgnoreCase(binPathStr)); // Remove duplicates
+                    pathEntries.add(binPathStr); // Add Javono bin
+                    String newPath = String.join(";", pathEntries);
+
+                    new ProcessBuilder("cmd", "/c", "setx PATH \"" + newPath + "\"")
                             .inheritIO()
                             .start()
                             .waitFor();
-                    LoggerFacade.getInstance().success("Javono CLI installed at: " + binDir);
-                    LoggerFacade.getInstance().success("Restart terminal to use `javono`.");
-                } catch (Exception e) {
-                    LoggerFacade.getInstance().error("Could not update PATH automatically.");
-                    LoggerFacade.getInstance().error("Add " + binDir + " to your PATH manually.");
+
+                    LoggerFacade.getInstance().success("PATH updated. Close and reopen terminal to use `javono`.");
+                } else {
+                    LoggerFacade.getInstance().info("Javono CLI folder already in PATH.");
                 }
 
             } else {
@@ -135,29 +150,39 @@ public class JavonoBootstrap {
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                 scriptPath.toFile().setExecutable(true);
 
-                // Update PATH for shell
+                // Determine shell RC file
                 String shell = System.getenv("SHELL");
                 Path rcFile = shell != null && shell.contains("zsh") ? userHome.resolve(".zshrc")
                         : shell != null && shell.contains("fish") ? userHome.resolve(".config/fish/config.fish")
                         : userHome.resolve(".bashrc");
 
+                // Prepare export line
                 String exportLine = shell != null && shell.contains("fish")
                         ? "set -gx PATH " + binDir.toString() + " $PATH"
                         : "export PATH=\"" + binDir.toString() + ":$PATH\"";
 
-                Files.write(rcFile, Arrays.asList("\n# Added by Javono", exportLine),
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                // Read existing RC file
+                List<String> lines = Files.exists(rcFile) ? Files.readAllLines(rcFile) : new ArrayList<>();
 
-                LoggerFacade.getInstance().success("Javono CLI installed at: " + binDir);
-                LoggerFacade.getInstance().success("Added PATH update to " + rcFile + ". Please restart your terminal.");
+                // Append only if not already present
+                if (lines.stream().noneMatch(l -> l.contains(binDir.toString()))) {
+                    lines.add("\n# Added by Javono");
+                    lines.add(exportLine);
+                    Files.write(rcFile, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                    LoggerFacade.getInstance().success("Added PATH update to " + rcFile + ". Please restart your terminal.");
+                } else {
+                    LoggerFacade.getInstance().info("Javono CLI folder already in PATH.");
+                }
             }
 
+            LoggerFacade.getInstance().success("Javono CLI installed at: " + binDir);
             LoggerFacade.getInstance().info("You can now run `javono help` to see available commands.");
 
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to install Javono CLI", e);
         }
     }
+
 
     public static void deleteDirectory(Path path) throws IOException {
         if (Files.exists(path)) {

@@ -102,36 +102,51 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder clean() {
-        try {
-            File dirToDelete = detectProjectDir().getParentFile();
-            deleteRecursively(dirToDelete);
-            LoggerFacade.getInstance().info("Deleted project directory: " + dirToDelete.getAbsolutePath());
-            projectDir = null; // reset after deletion
-        } catch (IllegalStateException e) {
-            LoggerFacade.getInstance().info("Nothing to clean: " + e.getMessage());
-        }
+        cleanProjectJavonoDir();
         return this;
     }
-
-    private void deleteRecursively(File file) {
-        if (!file.exists()) return;
-
-        if (file.isDirectory()) {
-            File[] contents = file.listFiles();
-            if (contents != null) {
-                for (File f : contents) {
-                    deleteRecursively(f);
-                }
-            }
-        }
-        file.delete();
-    }
-
 
     @Override
     public JavonoBuilder setOption(String key, String value) {
         return this;
     }
+
+    public void cleanProjectJavonoDir() {
+        try {
+            File baseDir = new File(System.getProperty("user.dir"));
+            File javonoProjectDir = new File(baseDir, ".javono"); // project-level .javono
+            File systemBinDir = new File(System.getProperty("user.home"), ".javono/bin");
+
+            // Safety check: do not touch the system-level CLI folder
+            if (javonoProjectDir.getAbsolutePath().equals(systemBinDir.getParentFile().getAbsolutePath())) {
+                LoggerFacade.getInstance().info("Skipping system .javono directory: " + javonoProjectDir.getAbsolutePath());
+                return;
+            }
+
+            if (javonoProjectDir.exists() && javonoProjectDir.isDirectory()) {
+                deleteRecursively(javonoProjectDir);
+                LoggerFacade.getInstance().info("Deleted project-level .javono directory: " + javonoProjectDir.getAbsolutePath());
+            } else {
+                LoggerFacade.getInstance().info("Nothing to clean: project-level .javono folder does not exist.");
+            }
+        } catch (IllegalStateException e) {
+            LoggerFacade.getInstance().info("Nothing to clean: " + e.getMessage());
+        } catch (IOException e) {
+            LoggerFacade.getInstance().error("Failed to clean project-level .javono directory: " + e.getMessage());
+        }
+    }
+
+    private void deleteRecursively(File file) throws IOException {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                deleteRecursively(child);
+            }
+        }
+        if (!file.delete()) {
+            throw new IOException("Failed to delete: " + file.getAbsolutePath());
+        }
+    }
+
 
     private File detectProjectDir() {
         // Get current working directory
@@ -176,30 +191,21 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
     private void checkInsideProjectRoot() {
         File dir = new File(System.getProperty("user.dir"));
-        boolean validRoot = false;
 
-        while (dir != null) {
-            File srcDir = new File(dir, "src");
-            File pomFile = new File(dir, "pom.xml");
-            File gradleFile = new File(dir, "build.gradle");
-            File gradleKtsFile = new File(dir, "build.gradle.kts");
-            File javonoDir = new File(dir, ".javono");
+        File srcDir = new File(dir, "src");
+        File pomFile = new File(dir, "pom.xml");
+        File gradleFile = new File(dir, "build.gradle");
+        File gradleKtsFile = new File(dir, "build.gradle.kts");
 
-            if ((srcDir.exists() && srcDir.isDirectory()) ||
-                    pomFile.exists() ||
-                    gradleFile.exists() ||
-                    gradleKtsFile.exists() ||
-                    (javonoDir.exists() && javonoDir.isDirectory())) {
-                validRoot = true;
-                break;
-            }
-            dir = dir.getParentFile();
-        }
+        // Only valid if 'src' folder exists AND at least one build file exists in the same directory
+        boolean validRoot = (srcDir.exists() && srcDir.isDirectory()) &&
+                (pomFile.exists() || gradleFile.exists() || gradleKtsFile.exists());
 
         if (!validRoot) {
             throw new IllegalStateException(
-                    "Javono build must be run from inside the project root or its subfolders. " +
-                            "Cannot find 'src', pom.xml, build.gradle, or .javono folder in current or parent directories."
+                    "Javono build must be run from the project root.\n" +
+                            "Expected a 'src' folder and one of: pom.xml, build.gradle, build.gradle.kts in the current directory.\n" +
+                            "Current directory: " + dir.getAbsolutePath()
             );
         }
     }
