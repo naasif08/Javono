@@ -31,6 +31,7 @@ public class RemoteBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder build() {
+        checkInsideProjectRoot();
         if (!DetectorFacade.getInstance().isToolPathsInitialized()) {
             DetectorFacade.getInstance().initializeToolPaths();
         }
@@ -82,5 +83,28 @@ public class RemoteBuilder implements JavonoBuilder {
     @Override
     public JavonoBuilder setOption(String key, String value) {
         return this;
+    }
+
+    private void checkInsideProjectRoot() {
+        File dir = new File(System.getProperty("user.dir"));
+
+        File srcDir = new File(dir, "src");
+        File pomFile = new File(dir, "pom.xml");
+        File gradleFile = new File(dir, "build.gradle");
+        File gradleKtsFile = new File(dir, "build.gradle.kts");
+
+        // Only valid if 'src' folder exists AND at least one build file exists in the same directory
+        boolean validRoot = ((srcDir.exists() && srcDir.isDirectory()))
+                || (pomFile.exists()
+                || gradleFile.exists()
+                || gradleKtsFile.exists());
+
+        if (!validRoot) {
+            throw new IllegalStateException(
+                    "Javono build must be run from the project root.\n" +
+                            "Expected a 'src' folder and one of: pom.xml, build.gradle, build.gradle.kts in the current directory.\n" +
+                            "Current directory: " + dir.getAbsolutePath()
+            );
+        }
     }
 }
