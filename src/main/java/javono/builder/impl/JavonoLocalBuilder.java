@@ -1,11 +1,11 @@
 package javono.builder.impl;
 
 import javono.builder.JavonoBuilder;
-import javono.utils.ColoredDiagnosticListener;
 import javono.detector.DetectorFacade;
 import javono.flasher.FlasherFacade;
 import javono.logger.LoggerFacade;
 import javono.probuilder.ProjectBuilderFacade;
+import javono.utils.UtilsFacade;
 import javono.validator.ValidatorFacade;
 
 import javax.tools.*;
@@ -44,7 +44,7 @@ public class JavonoLocalBuilder implements JavonoBuilder {
         options.add("-processor");
         options.add("javono.annotations.processor.AnnotationProcessor"); // full processor class name
 
-        DiagnosticListener<JavaFileObject> listener = new ColoredDiagnosticListener();
+        DiagnosticListener<JavaFileObject> listener = UtilsFacade.getInstance().getColoredDiagnosticListener();
 
         JavaCompiler.CompilationTask task = compiler.getTask(
                 null,

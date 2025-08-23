@@ -12,6 +12,7 @@ public class UtilsFacade {
     private static final FileDownloader fileDownloader = new FileDownloader();
     private static final CommandRunner commandRunner = new CommandRunner();
     private static final PythonEnvChecker pythonEnvChecker = new PythonEnvChecker();
+    private final ColoredDiagnosticListener ColoredDiagnosticListener = new ColoredDiagnosticListener();
 
 
     private UtilsFacade() {
@@ -20,6 +21,10 @@ public class UtilsFacade {
 
     public static UtilsFacade getInstance() {
         return INSTANCE;
+    }
+
+    public ColoredDiagnosticListener getColoredDiagnosticListener() {
+        return this.ColoredDiagnosticListener;
     }
 
     public void extractZip(Path zipFilePath, Path outputFolder) throws IOException {

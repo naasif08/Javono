@@ -1,8 +1,0 @@
-#!/bin/sh
-# Javono CLI launcher for Linux/macOS
-
-# Resolve the directory of this script
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# Run Javono CLI jar with all arguments passed to the script
-java -cp "$SCRIPT_DIR/javono.jar" javono.cli.JavonoCli "$@"

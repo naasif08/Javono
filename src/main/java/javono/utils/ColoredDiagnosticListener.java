@@ -10,7 +10,7 @@ import javax.tools.JavaFileObject;
  * - Yellow for warnings
  * - White for notes
  */
-public class ColoredDiagnosticListener implements DiagnosticListener<JavaFileObject> {
+class ColoredDiagnosticListener implements DiagnosticListener<JavaFileObject> {
 
     private static final String RESET = "\u001B[0m";
     private static final String RED = "\u001B[31m";
