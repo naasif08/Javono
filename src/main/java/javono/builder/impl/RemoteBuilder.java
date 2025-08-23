@@ -31,6 +31,8 @@ public class RemoteBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder build() {
+        LoggerFacade.getInstance().info("This feature has not been implemented yet.");
+        System.exit(1);
         checkInsideProjectRoot();
         if (!DetectorFacade.getInstance().isToolPathsInitialized()) {
             DetectorFacade.getInstance().initializeToolPaths();
@@ -51,6 +53,8 @@ public class RemoteBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder flash() {
+        LoggerFacade.getInstance().info("This feature has not been implemented yet.");
+        System.exit(1);
         try {
             Path firmwareDir = DetectorFacade.getInstance().getDotJavonoDir().toPath().resolve("firmware");
             Files.createDirectories(firmwareDir);
@@ -77,6 +81,8 @@ public class RemoteBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder clean() {
+        LoggerFacade.getInstance().info("This feature has not been implemented yet.");
+        System.exit(1);
         return this;
     }
 
