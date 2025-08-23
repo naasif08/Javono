@@ -198,8 +198,10 @@ public class JavonoLocalBuilder implements JavonoBuilder {
         File gradleKtsFile = new File(dir, "build.gradle.kts");
 
         // Only valid if 'src' folder exists AND at least one build file exists in the same directory
-        boolean validRoot = (srcDir.exists() && srcDir.isDirectory()) &&
-                (pomFile.exists() || gradleFile.exists() || gradleKtsFile.exists());
+        boolean validRoot = ((srcDir.exists() && srcDir.isDirectory()))
+                || (pomFile.exists()
+                || gradleFile.exists()
+                || gradleKtsFile.exists());
 
         if (!validRoot) {
             throw new IllegalStateException(
