@@ -180,14 +180,9 @@ public class JavonoBootstrap {
     }
 
     public static void ensureInstalled() {
-        try {
-            // Try to locate Espressif toolchain
-            DetectorFacade.getInstance().findEspressifGitPath();
 
-            LoggerFacade.getInstance().info(
-                    "Javono installation verified"
-            );
-        } catch (IllegalStateException e) {
+        Path flagFile = Paths.get(InstallerFacade.getInstance().getJavonoFolder().toString(), "installcomplete.txt");
+        if (!Files.exists(flagFile)) {
             LoggerFacade.getInstance().error(
                     "Javono is not installed!\n" +
                             "Please run: javono init\n" +
@@ -196,21 +191,11 @@ public class JavonoBootstrap {
                             "  - Windows: %USERPROFILE%\\.javono"
             );
             System.exit(1); // Hard stop before build
-        } catch (Exception e) {
-            LoggerFacade.getInstance().error(
-                    "Unexpected error while checking installation: " +
-                            e.getMessage()
-            );
-            System.exit(1);
         }
     }
 
     public static void uninstallJavono() {
-        String userHome = System.getProperty("user.home");
-        File userJavono = new File(userHome, ".javono");
-        deleteRecursively(userJavono, "user .javono folder");
 
-        // OS-specific system folder
         OS os = OS.detect();
         File systemJavono = null;
         if (os.isWindows()) {
@@ -225,18 +210,24 @@ public class JavonoBootstrap {
             Scanner scanner = new Scanner(System.in);
             String input = scanner.nextLine().trim().toLowerCase();
             if (input.equals("yes") || input.equals("y")) {
-                deleteRecursively(systemJavono, "system Javono folder");
+                deleteRecursivelyWithRetry(systemJavono, "system Javono folder");
             } else {
                 LoggerFacade.getInstance().info("Skipped deleting system Javono folder.");
             }
         }
 
-        // Update PATH (only removes bin entry for this session or future sessions via setx on Windows)
+        String userHome = System.getProperty("user.home");
+        File userJavono = new File(userHome, ".javono");
+        deleteRecursivelyWithRetry(userJavono, "user .javono folder");
+        Runtime.getRuntime().addShutdownHook(new Thread(() ->
+                deleteRecursivelyWithRetry(userJavono, ".javono folder (shutdown hook)")
+        ));
+
         File binDir = new File(userJavono, "bin");
         try {
             if (os.isWindows()) {
-                // Remove from user PATH in Windows via setx (best effort, cannot remove from current session)
-                new ProcessBuilder("cmd", "/c", "setx PATH \"%PATH:;" + binDir.getAbsolutePath() + "=%\"")
+                new ProcessBuilder("cmd", "/c",
+                        "setx PATH \"%PATH;" + binDir.getAbsolutePath() + "=%\"")
                         .inheritIO().start().waitFor();
                 LoggerFacade.getInstance().info("Removed Javono bin from PATH. Close/reopen terminal to take effect.");
             } else {
@@ -247,25 +238,42 @@ public class JavonoBootstrap {
         }
 
         LoggerFacade.getInstance().info("Javono uninstallation completed.");
+        LoggerFacade.getInstance().info("If " + userJavono.getAbsolutePath() + " isn't deleted properly, you can delete it manually.");
     }
 
-    private static void deleteRecursively(File file, String description) {
+    private static void deleteRecursivelyWithRetry(File file, String description) {
         if (file == null || !file.exists()) return;
 
         if (file.isDirectory()) {
-            File[] contents = file.listFiles();
-            if (contents != null) {
-                for (File f : contents) {
-                    deleteRecursively(f, description);
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursivelyWithRetry(child, description);
                 }
             }
         }
-        if (file.delete()) {
-            LoggerFacade.getInstance().info("Deleted " + description + ": " + file.getAbsolutePath());
-        } else {
-            LoggerFacade.getInstance().error("Failed to delete " + description + ": " + file.getAbsolutePath());
+
+        int attempts = 0;
+        while (attempts < 5 && file.exists()) {
+            file.setWritable(true); // make sure file is writable
+            boolean deleted = file.delete();
+            if (deleted) {
+                LoggerFacade.getInstance().info("Deleted " + description + ": " + file.getAbsolutePath());
+                break;
+            }
+            attempts++;
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ignored) {
+            }
+        }
+
+        if (file.exists()) {
+            LoggerFacade.getInstance().error("Failed to delete " + description + ": " + file.getAbsolutePath() +
+                    " (may be in use; shutdown hook will retry)");
         }
     }
+
 
     public static void deleteDirectory(Path path) throws IOException {
         if (Files.exists(path)) {

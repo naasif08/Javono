@@ -9,7 +9,7 @@ import javono.logger.LoggerFacade;
 
 public class JavonoCli {
 
-    public static final String JAVONO_VERSION = "1.0.2";
+    public static final String JAVONO_VERSION = "1.0.3";
 
     public static void main(String[] args) {
         if (args.length == 0) {

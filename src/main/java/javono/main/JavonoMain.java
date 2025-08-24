@@ -9,6 +9,6 @@ public class JavonoMain {
     public static void main(String arg[]) {
 
         JavonoBootstrap.installCli();
-
+        JavonoBootstrap.uninstallJavono();
     }
 }
