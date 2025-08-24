@@ -1,5 +1,6 @@
 package javono.builder.impl;
 
+import javono.bootstrap.JavonoBootstrap;
 import javono.builder.JavonoBuilder;
 import javono.detector.DetectorFacade;
 import javono.flasher.FlasherFacade;
@@ -20,6 +21,7 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
     @Override
     public JavonoBuilder build() {
+        JavonoBootstrap.ensureInstalled();
         checkInsideProjectRoot();
         // ----------------------------
         // CLI compilation with annotation processor
@@ -70,6 +72,8 @@ public class JavonoLocalBuilder implements JavonoBuilder {
 
         if (!DetectorFacade.getInstance().isToolPathsInitialized()) {
             DetectorFacade.getInstance().initializeToolPaths();
+        } else {
+            LoggerFacade.getInstance().error("Toolchain missing make sure Javono is installed perfectly.");
         }
         try {
             this.projectDir = ProjectBuilderFacade.getInstance().createProject();

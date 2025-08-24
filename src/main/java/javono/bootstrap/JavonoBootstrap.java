@@ -8,10 +8,10 @@ import javono.installer.*;
 import javono.logger.LoggerFacade;
 import javono.utils.UtilsFacade;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
@@ -183,6 +183,93 @@ public class JavonoBootstrap {
         }
     }
 
+    public static void ensureInstalled() {
+        try {
+            // Try to locate Espressif toolchain
+            DetectorFacade.getInstance().findEspressifGitPath();
+
+            LoggerFacade.getInstance().info(
+                    "Javono installation verified"
+            );
+        } catch (IllegalStateException e) {
+            LoggerFacade.getInstance().error(
+                    "Javono is not installed!\n" +
+                            "Please run: javono init\n" +
+                            "This will set up required files in:\n" +
+                            "  - Linux/macOS: ~/.javono\n" +
+                            "  - Windows: %USERPROFILE%\\.javono"
+            );
+            System.exit(1); // Hard stop before build
+        } catch (Exception e) {
+            LoggerFacade.getInstance().error(
+                    "Unexpected error while checking installation: " +
+                            e.getMessage()
+            );
+            System.exit(1);
+        }
+    }
+
+    public static void uninstallJavono() {
+        String userHome = System.getProperty("user.home");
+        File userJavono = new File(userHome, ".javono");
+        deleteRecursively(userJavono, "user .javono folder");
+
+        // OS-specific system folder
+        OS os = OS.detect();
+        File systemJavono = null;
+        if (os.isWindows()) {
+            systemJavono = new File("C:\\Javono");
+        } else if (os.isLinux() || os.isMac() || os.isUnixLike()) {
+            systemJavono = new File("/opt/Javono");
+        }
+
+        if (systemJavono != null && systemJavono.exists()) {
+            LoggerFacade.getInstance().info("Detected system Javono folder at: " + systemJavono.getAbsolutePath());
+            LoggerFacade.getInstance().info("Do you want to delete this folder? (yes/no)");
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine().trim().toLowerCase();
+            if (input.equals("yes") || input.equals("y")) {
+                deleteRecursively(systemJavono, "system Javono folder");
+            } else {
+                LoggerFacade.getInstance().info("Skipped deleting system Javono folder.");
+            }
+        }
+
+        // Update PATH (only removes bin entry for this session or future sessions via setx on Windows)
+        File binDir = new File(userJavono, "bin");
+        try {
+            if (os.isWindows()) {
+                // Remove from user PATH in Windows via setx (best effort, cannot remove from current session)
+                new ProcessBuilder("cmd", "/c", "setx PATH \"%PATH:;" + binDir.getAbsolutePath() + "=%\"")
+                        .inheritIO().start().waitFor();
+                LoggerFacade.getInstance().info("Removed Javono bin from PATH. Close/reopen terminal to take effect.");
+            } else {
+                LoggerFacade.getInstance().info("For macOS/Linux, remove '" + binDir.getAbsolutePath() + "' from PATH manually.");
+            }
+        } catch (Exception e) {
+            LoggerFacade.getInstance().error("Failed to update PATH: " + e.getMessage());
+        }
+
+        LoggerFacade.getInstance().info("Javono uninstallation completed.");
+    }
+
+    private static void deleteRecursively(File file, String description) {
+        if (file == null || !file.exists()) return;
+
+        if (file.isDirectory()) {
+            File[] contents = file.listFiles();
+            if (contents != null) {
+                for (File f : contents) {
+                    deleteRecursively(f, description);
+                }
+            }
+        }
+        if (file.delete()) {
+            LoggerFacade.getInstance().info("Deleted " + description + ": " + file.getAbsolutePath());
+        } else {
+            LoggerFacade.getInstance().error("Failed to delete " + description + ": " + file.getAbsolutePath());
+        }
+    }
 
     public static void deleteDirectory(Path path) throws IOException {
         if (Files.exists(path)) {

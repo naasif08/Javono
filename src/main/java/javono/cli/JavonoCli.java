@@ -51,6 +51,10 @@ public class JavonoCli {
                 LoggerFacade.getInstance().info("Javono CLI version: " + JAVONO_VERSION);
                 break;
 
+            case "uninstall":
+                JavonoBootstrap.uninstallJavono();
+                break;
+
             case "help":
             default:
                 printHelp();
@@ -65,6 +69,7 @@ public class JavonoCli {
         LoggerFacade.getInstance().info("     flash             Flash firmware to the device");
         LoggerFacade.getInstance().info("     clean             Clean build artifacts");
         LoggerFacade.getInstance().info("    --version          Shows current version of Javono");
+        LoggerFacade.getInstance().info("    uninstall          This will uninstall the Javono");
         LoggerFacade.getInstance().info("     help              Show this help message");
 
     }

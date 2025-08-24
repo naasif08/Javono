@@ -8,7 +8,6 @@ public class JavonoMain {
 
     public static void main(String arg[]) {
 
-        System.out.println("Running");
          new JavonoLocalBuilder().build();
 
     }
