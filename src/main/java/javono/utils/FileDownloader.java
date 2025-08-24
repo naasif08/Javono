@@ -65,12 +65,12 @@ class FileDownloader {
 
                         if (System.currentTimeMillis() - lastPrint > 1000) {
                             int percent = (int) ((downloaded * 100) / expectedTotal);
-                            System.out.print("\r[Javono] Downloading: [" + "▇".repeat(percent / 2) + "_".repeat(50 - (percent / 2)) + "] " + percent + "%");
+                            System.out.print("\r[Javono] Downloading: [" + "#".repeat(percent / 2) + "_".repeat(50 - (percent / 2)) + "] " + percent + "%");
                             lastPrint = System.currentTimeMillis();
                         }
                     }
                     if (expectedTotal > 0 && downloaded >= expectedTotal) {
-                        System.out.print("\r[Javono] Downloading: [" + "▇".repeat(50) + "] 100%\n");
+                        System.out.print("\r[Javono] Downloading: [" + "#".repeat(50) + "] 100%\n");
                     }
 
                     System.out.println(); // New line after progress bar
