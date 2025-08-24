@@ -123,24 +123,20 @@ public class JavonoBootstrap {
                 // Update user PATH using setx (avoids duplicates)
                 String currentPath = System.getenv("PATH");
                 String binPathStr = binDir.toString();
-                if (currentPath == null || !Arrays.asList(currentPath.split(";")).stream()
-                        .anyMatch(p -> p.equalsIgnoreCase(binPathStr))) {
 
-                    // Build a unique PATH
-                    Set<String> pathEntries = new LinkedHashSet<>(Arrays.asList(currentPath != null ? currentPath.split(";") : new String[0]));
-                    pathEntries.removeIf(p -> p.equalsIgnoreCase(binPathStr)); // Remove duplicates
-                    pathEntries.add(binPathStr); // Add Javono bin
-                    String newPath = String.join(";", pathEntries);
+                // Build a unique PATH
+                Set<String> pathEntries = new LinkedHashSet<>(Arrays.asList(currentPath != null ? currentPath.split(";") : new String[0]));
+                pathEntries.removeIf(p -> p.equalsIgnoreCase(binPathStr)); // Remove duplicates
+                pathEntries.add(binPathStr); // Add Javono bin
+                String newPath = String.join(";", pathEntries);
 
-                    new ProcessBuilder("cmd", "/c", "setx PATH \"" + newPath + "\"")
-                            .inheritIO()
-                            .start()
-                            .waitFor();
+                new ProcessBuilder("cmd", "/c", "setx PATH \"" + newPath + "\"")
+                        .inheritIO()
+                        .start()
+                        .waitFor();
 
-                    LoggerFacade.getInstance().success("PATH updated. Close and reopen terminal to use `javono`.");
-                } else {
-                    LoggerFacade.getInstance().info("Javono CLI folder already in PATH.");
-                }
+                LoggerFacade.getInstance().success("PATH updated. Close and reopen terminal to use `javono`.");
+
 
             } else {
                 // Linux/macOS launcher

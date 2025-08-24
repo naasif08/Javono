@@ -8,7 +8,7 @@ public class JavonoMain {
 
     public static void main(String arg[]) {
 
-         new JavonoLocalBuilder().build();
+        JavonoBootstrap.installCli();
 
     }
 }
