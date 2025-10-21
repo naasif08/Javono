@@ -24,7 +24,7 @@ import javono.lib.GPIO;
 import javono.lib.Javono;
 
 @JavonoEmbeddedSketch
-public class BlinkExample {
+public class SerialExample {
 
     @JavonoEmbeddedInit
     private void setUp() {
