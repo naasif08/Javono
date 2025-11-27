@@ -53,9 +53,17 @@ public class Main {
 
 ## License
 
-This project is licensed under the MIT License.  
-See [LICENSE](LICENSE) for full license details.  
-See the [NOTICE](NOTICE) file for attribution and licensing guidelines.
+## 📄 License
+
+Javono is licensed under the **Apache License 2.0**.
+
+This means you are free to use, modify, distribute, and integrate the code in both open-source and commercial projects, as long as you include the required notices and do not hold the authors liable.
+
+For full details, see the [LICENSE](./LICENSE) file in this repository.
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
+
+
 
 ---
 
