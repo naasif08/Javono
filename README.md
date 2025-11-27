@@ -53,8 +53,6 @@ public class Main {
 
 ## License
 
-## 📄 License
-
 Javono is licensed under the **Apache License 2.0**.
 
 This means you are free to use, modify, distribute, and integrate the code in both open-source and commercial projects, as long as you include the required notices and do not hold the authors liable.
