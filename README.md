@@ -57,7 +57,8 @@ Javono is licensed under the **Apache License 2.0**.
 
 This means you are free to use, modify, distribute, and integrate the code in both open-source and commercial projects, as long as you include the required notices and do not hold the authors liable.
 
-For full details, see the [LICENSE](./LICENSE) file in this repository.
+See the [LICENSE](LICENSE) file for full license details.  
+See the [NOTICE](NOTICE) file for attribution information.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 
