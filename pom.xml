@@ -54,6 +54,20 @@
 
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub naasif08 Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/naasif08/Javono</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>github</id>
+            <name>GitHub naasif08 Apache Maven Snapshot Packages</name>
+            <url>https://maven.pkg.github.com/naasif08/Javono</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <!-- Java 21 Compiler Support -->
